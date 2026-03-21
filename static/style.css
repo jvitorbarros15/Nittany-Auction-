@@ -1,11 +1,37 @@
 body {
-    font-family: Arial;
-    text-align: center;
-    margin-top: 100px;
+    margin: 0;
 }
 
-button {
-    padding: 10px 20px;
-    font-size: 16px;
-    cursor: pointer;
+.first-navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 40px;
+    background-color: #1e1e2f;
+    color: white;
+}
+
+.first-navbar h1 {
+    margin: 0;
+    font-size: 22px;
+}
+
+.nav-links {
+    display: flex;
+    gap: 15px;
+}
+
+.nav-links a {     /* Style for the home and login buttons on homepage */
+    text-decoration: none;
+    color: white;
+    padding: 10px 18px;
+    border-radius: 6px;
+    background-color: #444;
+    font-weight: bold;
+    transition: 0.2s;
+}
+
+.nav-links a:hover {
+    transform: translateY(-2px);
+    opacity: 0.9;
 }

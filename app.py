@@ -6,7 +6,6 @@ app = Flask(__name__)
 def homepage():
     return render_template("homepage.html")
 
-# Have to add the route to login page here
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":

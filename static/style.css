@@ -80,3 +80,19 @@ body {
 .login-box button:hover {
     opacity: 0.9;
 }
+
+.back-btn {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    text-decoration: none;
+    background-color: #444;
+    color: white;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.back-btn:hover {
+    opacity: 0.85;
+}

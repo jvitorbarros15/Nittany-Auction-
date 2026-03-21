@@ -1,7 +1,8 @@
 from flask import Flask, flash, render_template, request, redirect
 import sqlite3
-from werkzeug.security import check_password_hash
+import hashlib
 app = Flask(__name__)
+app.secret_key = "your_secret_key" 
 
 @app.route("/")
 def homepage():
@@ -13,6 +14,7 @@ def login():
     if request.method == "POST":
         email = request.form["email"]
         password = request.form["password"]
+        hashed_input_password = hashlib.sha256(password.encode()).hexdigest()
 
         # Connect to SQLite database
         connection = sqlite3.connect("nittanyauction.db")
@@ -22,7 +24,7 @@ def login():
         connection.close()  
 
         # This checks if the password matches the hash stored in the database and gets the role from the database (seller, buyer, helpdesk)
-        if user and check_password_hash(user[2], password):
+        if user and user[2] == hashed_input_password:
             role = user[3].lower()     # This works based on the user tuple format due to using cursor.execute()
                                        # Example of user tuple: (id, email, password_hash, role)
             if role == "seller":
@@ -36,6 +38,18 @@ def login():
             return redirect("/login")
 
     return render_template("login.html")
+
+@app.route("/seller")
+def seller():
+    return render_template("seller.html")
+
+@app.route("/buyer")
+def buyer():
+    return render_template("buyer.html")
+
+@app.route("/helpdesk")
+def helpdesk():
+    return render_template("helpdesk.html")
 
 
 if __name__ == "__main__":

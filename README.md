@@ -11,6 +11,7 @@ The structure of our code has 3 folders, for styling, test data and webpages, in
 - `seed_users.py` – Script to populate database from CSV
 - `Users.csv` – Dataset containing users (email, password, role)
 - `nittanyauction.db` – SQLite database
+- `NittanyAuctionDataset_v1` - Test CSVs
 - `templates/` – HTML pages
 - `static/` – CSS files
 

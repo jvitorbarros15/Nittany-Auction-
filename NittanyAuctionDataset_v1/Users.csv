@@ -1,0 +1,7 @@
+email,password,role
+seller1@test.com,pass123,seller
+seller2@test.com,pass123,seller
+buyer1@test.com,pass123,buyer
+buyer2@test.com,pass123,buyer
+help1@test.com,pass123,helpdesk
+help2@test.com,pass123,helpdesk

@@ -5,11 +5,11 @@ import sqlite3
 from pathlib import Path
 
 
-def sha256_hash(password: str, salt_hex: str) -> str:
+def sha256_hash(password: str, salt_hex: str):
     return hashlib.sha256((salt_hex + password).encode("utf-8")).hexdigest()
 
 
-def load_email_set(csv_path: Path) -> set[str]:
+def load_email_set(csv_path: Path):
     emails: set[str] = set()
     if not csv_path.exists():
         return emails
@@ -24,21 +24,14 @@ def load_email_set(csv_path: Path) -> set[str]:
     return emails
 
 
-def main() -> None:
+def main():
     root = Path(__file__).resolve().parent
     dataset_dir = root / "NittanyAuctionDataset_v1"
 
     users_csv = dataset_dir / "Users.csv"
-    sellers_csv = dataset_dir / "Sellers.csv"
-    bidders_csv = dataset_dir / "Bidders.csv"
-    helpdesk_csv = dataset_dir / "Helpdesk.csv"
 
     if not users_csv.exists():
         raise FileNotFoundError(f"Missing dataset file: {users_csv}")
-
-    seller_emails = load_email_set(sellers_csv)
-    bidder_emails = load_email_set(bidders_csv)
-    helpdesk_emails = load_email_set(helpdesk_csv)
 
     db_path = root / "nittanyauction.db"
     conn = sqlite3.connect(db_path)
@@ -62,18 +55,11 @@ def main() -> None:
             for row in reader:
                 email = (row.get("email") or row.get("\ufeffemail") or "").strip().lower()
                 password = (row.get("password") or "").strip()
-
-                if not email:
+                
+                role = (row.get("role") or "").strip().lower()
+                
+                if not email or not password or not role: 
                     continue
-
-                if email in helpdesk_emails:
-                    role = "helpdesk"
-                elif email in seller_emails:
-                    role = "seller"
-                elif email in bidder_emails:
-                    role = "buyer"
-                else:
-                    role = "buyer"
 
                 salt = secrets.token_hex(16)
                 password_hash = sha256_hash(password, salt)

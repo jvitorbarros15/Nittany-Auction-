@@ -48,15 +48,15 @@ def login():
 
 @app.route("/seller")
 def seller():
-    return render_template("seller.html")
+    return render_template("seller_welcome.html")
 
 @app.route("/buyer")
 def buyer():
-    return render_template("buyer.html")
+    return render_template("buyer_welcome.html")
 
 @app.route("/helpdesk")
 def helpdesk():
-    return render_template("helpdesk.html")
+    return render_template("helpdesk_welcome.html")
 
 
 if __name__ == "__main__":

@@ -1,19 +1,22 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Homepage</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"> <!-- Flask generates correct path to static CSS -->
+    <title>NittanyAuction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <nav class="first-navbar">
-        <h1>Welcome to NittanyAuction!!</h1>
-
+        <img src="{{ url_for('static', filename='logo.svg') }}" alt="NittanyAuction" height="36">
         <div class="nav-links">
             <a href="/">Home</a>
-            <a href="/login" class="login-btn">Login</a>
+            <a href="/login">Login</a>
         </div>
     </nav>
-        
+
+    <div class="hero">
+        <h2>Buy & Sell with Confidence</h2>
+        <p>Join NittanyAuction — a trusted marketplace for buyers, sellers, and support.</p>
+        <a href="/login" class="hero-btn">Get Started</a>
     </div>
 </body>
 </html>

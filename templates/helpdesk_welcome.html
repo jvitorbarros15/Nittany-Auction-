@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>HelpDesk Welcome</title>
+    <title>HelpDesk — NittanyAuction</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <a href="/" class="back-btn">← Home</a>
-    <div class="login-container">
-        <div class="login-box">
-            <h1>Welcome, HelpDesk</h1>
+    <div class="welcome-container">
+        <div class="welcome-card">
+            <span class="role-badge">HelpDesk</span>
+            <h1>Welcome!</h1>
+            <p>You're logged in as a helpdesk agent. Assist users and resolve issues.</p>
+            <a href="/" class="home-link">← Back to Home</a>
         </div>
     </div>
 </body>

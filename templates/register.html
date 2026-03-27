@@ -1,13 +1,45 @@
-<form method="POST" action="/register">
-    <input type="email" name="email" placeholder="Email" required>
-    <input type="password" name="password" placeholder="Password" required>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register — NittanyAuction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <a href="/login" class="back-btn">← Back</a>
 
-    <select name="role" required>
-        <option value="">Select role</option>
-        <option value="buyer">Buyer</option>
-        <option value="seller">Seller</option>
-        <option value="helpdesk">Helpdesk</option>
-    </select>
+    <div class="login-container">
+        <div class="login-box">
+            <img src="{{ url_for('static', filename='logo-dark.svg') }}" alt="NittanyAuction" height="40" style="margin-bottom:16px;">
+            
+            <h1>Create account</h1>
+            <p class="subtitle">Join NittanyAuction to get started</p>
 
-    <button type="submit">Register</button>
-</form>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="/register">
+                <input type="email" name="email" placeholder="Email address" required>
+                <input type="password" name="password" placeholder="Password" required>
+
+                <select name="role" required>
+                    <option value="">Select role</option>
+                    <option value="buyer">Buyer</option>
+                    <option value="seller">Seller</option>
+                    <option value="helpdesk">Helpdesk</option>
+                </select>
+
+                <button type="submit">Create Account</button>
+            </form>
+
+            <form action="/login" method="GET">
+                <button type="submit">Back to Login</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

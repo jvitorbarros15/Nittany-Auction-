@@ -160,6 +160,17 @@ body {
     transform: translateY(-1px);
 }
 
+.login-box select {
+    width: 100%;
+    padding: 11px 14px;
+    margin-bottom: 14px;
+    border-radius: 7px;
+    border: 1.5px solid #ddd;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+}
+
 /* Flash messages */
 .flash-error {
     background-color: #fdecea;
@@ -169,6 +180,17 @@ body {
     padding: 10px 14px;
     font-size: 13px;
     margin-bottom: 16px;
+    text-align: left;
+}
+
+.flash-success {
+    background-color: #e6f4ea;
+    color: #2e7d32;
+    border: 1px solid #a5d6a7;
+    padding: 10px 14px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+    font-size: 13px;
     text-align: left;
 }
 

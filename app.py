@@ -79,7 +79,7 @@ def register():
 
         if existing_user:
             connection.close()
-            flash("Email already registered.")
+            flash("Email already registered.", "error")
             return redirect("/register")
         salt = hashlib.sha256(email.encode("utf-8")).hexdigest()[:16]
         password_hash = hashlib.sha256((salt + password).encode("utf-8")).hexdigest()
@@ -92,7 +92,7 @@ def register():
         connection.commit()
         connection.close()
 
-        flash("Registration successful! Please log in.")
+        flash("Welcome to NittanyAuction. Your account has been created.", "success")
         return redirect("/login")
 
     return render_template("register.html")

@@ -58,6 +58,45 @@ def buyer():
 def helpdesk():
     return render_template("helpdesk_welcome.html")
 
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if request.method == "POST":
+        email = request.form["email"]
+        password = request.form["password"]
+        role = request.form.get("role")
+
+        valid_roles = ["seller", "buyer", "helpdesk"]
+        if role not in valid_roles:
+            flash("Invalid role selected.")
+            return redirect("/register")
+
+        connection = sqlite3.connect("nittanyauction.db")
+        cursor = connection.cursor()
+
+        # Here we are checking if user already exists
+        cursor.execute("SELECT * FROM auth_users WHERE email = ?", (email,))
+        existing_user = cursor.fetchone()
+
+        if existing_user:
+            connection.close()
+            flash("Email already registered.")
+            return redirect("/register")
+        salt = hashlib.sha256(email.encode("utf-8")).hexdigest()[:16]
+        password_hash = hashlib.sha256((salt + password).encode("utf-8")).hexdigest()
+
+        # Insert new user
+        cursor.execute(
+            "INSERT INTO auth_users (email, password_hash, salt, role) VALUES (?, ?, ?, ?)",
+            (email, password_hash, salt, role)
+        )
+        connection.commit()
+        connection.close()
+
+        flash("Registration successful! Please log in.")
+        return redirect("/login")
+
+    return render_template("register.html")
+
 
 if __name__ == "__main__":
     app.run(debug=True)

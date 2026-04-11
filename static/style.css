@@ -272,3 +272,69 @@ body {
 .back-btn:hover {
     background-color: rgba(255,255,255,0.2);
 }
+
+/* ── Seller dashboard ── */
+.nav-user {
+    font-size: 13px;
+    color: rgba(255,255,255,0.55);
+    padding: 8px 12px;
+}
+
+.seller-content {
+    max-width: 960px;
+    margin: 48px auto;
+    padding: 0 24px;
+}
+
+.seller-content h2 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1e1e2f;
+    margin-bottom: 6px;
+}
+
+.seller-subtitle {
+    font-size: 14px;
+    color: #888;
+    margin-bottom: 36px;
+}
+
+.dashboard-cards {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.dashboard-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-decoration: none;
+    background: white;
+    border-radius: 12px;
+    padding: 28px 32px;
+    width: 220px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    transition: transform 0.15s, box-shadow 0.15s;
+    color: #1e1e2f;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+}
+
+.card-icon {
+    font-size: 28px;
+}
+
+.card-label {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.card-desc {
+    font-size: 13px;
+    color: #888;
+    line-height: 1.5;
+}

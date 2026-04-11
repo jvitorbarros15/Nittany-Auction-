@@ -46,9 +46,26 @@ def login():
 
     return render_template("login.html")
 
+def seller_required():
+    if session.get("role") != "seller":
+        flash("Please log in as a seller to access that page.", "error")
+        return redirect("/login")
+    return None
+
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    flash("You have been logged out.", "success")
+    return redirect("/login")
+
+
 @app.route("/seller")
 def seller():
-    return render_template("seller_welcome.html")
+    guard = seller_required()
+    if guard:
+        return guard
+    return render_template("seller_welcome.html", email=session["email"])
 
 @app.route("/buyer")
 def buyer():

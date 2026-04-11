@@ -41,7 +41,7 @@ def login():
                 elif role == "helpdesk":
                     return redirect("/helpdesk")
         
-        flash("Invalid email or password.")
+        flash("Invalid email or password.", "error")
         return redirect("/login")
 
     return render_template("login.html")

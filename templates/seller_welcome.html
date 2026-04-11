@@ -5,6 +5,14 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+    <nav class="first-navbar">
+        <img src="{{ url_for('static', filename='logo.svg') }}" alt="NittanyAuction" height="36">
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="/login">Login</a>
+        </div>
+    </nav>
+
     <div class="welcome-container">
         <div class="welcome-card">
             <span class="role-badge">Seller</span>

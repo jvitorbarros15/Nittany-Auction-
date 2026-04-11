@@ -1,4 +1,4 @@
-from flask import Flask, flash, render_template, request, redirect
+from flask import Flask, flash, render_template, request, redirect, session
 import sqlite3
 import hashlib
 app = Flask(__name__)
@@ -32,8 +32,8 @@ def login():
             hashed_input = hashlib.sha256((salt + password).encode("utf-8")).hexdigest()
 
             if stored_password_hash == hashed_input:
-                role = user[3].lower()     # This works based on the user tuple format due to using cursor.execute()
-                                        # Example of user tuple: (id, email, password_hash, role)
+                session["email"] = user[0]
+                session["role"]  = role
                 if role == "seller":
                     return redirect("/seller")
                 elif role == "buyer":

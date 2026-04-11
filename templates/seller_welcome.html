@@ -1,24 +1,40 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Seller — NittanyAuction</title>
+    <title>Seller Dashboard — NittanyAuction</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <nav class="first-navbar">
         <img src="{{ url_for('static', filename='logo.svg') }}" alt="NittanyAuction" height="36">
         <div class="nav-links">
-            <a href="/">Home</a>
-            <a href="/login">Login</a>
+            <span class="nav-user">{{ email }}</span>
+            <a href="/seller/listings">My Listings</a>
+            <a href="/logout">Logout</a>
         </div>
     </nav>
 
-    <div class="welcome-container">
-        <div class="welcome-card">
-            <span class="role-badge">Seller</span>
-            <h1>Welcome!</h1>
-            <p>You're logged in as a seller. Manage and post your listings.</p>
-            <a href="/" class="home-link">← Back to Home</a>
+    <div class="seller-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <h2>Seller Dashboard</h2>
+        <p class="seller-subtitle">Welcome back, {{ email }}</p>
+
+        <div class="dashboard-cards">
+            <a href="/seller/listings" class="dashboard-card">
+                <div class="card-icon">📦</div>
+                <div class="card-label">My Listings</div>
+                <div class="card-desc">View and manage all your auction listings</div>
+            </a>
+            <a href="/seller/listings/new" class="dashboard-card">
+                <div class="card-icon">+</div>
+                <div class="card-label">Create Listing</div>
+                <div class="card-desc">Post a new item for auction</div>
+            </a>
         </div>
     </div>
 </body>

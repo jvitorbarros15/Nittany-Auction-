@@ -103,6 +103,26 @@ def seller_listing_new():
                            categories=categories,
                            email=session["email"])
 
+@app.route("/seller/listings/<int:listing_id>/remove", methods=["GET", "POST"])
+def seller_listing_remove(listing_id):
+    guard = role_required("seller")
+    if guard:
+        return guard
+
+    connection = sqlite3.connect("nittanyauction.db")
+    connection.row_factory = sqlite3.Row  # this lets us use listing['title'] instead of listing[0]
+    cursor = connection.cursor()
+
+    # get the listing so we can show the title on the page
+    cursor.execute("SELECT * FROM listings WHERE listing_id = ?", (listing_id,))
+    listing = cursor.fetchone()
+    connection.close()
+
+    return render_template("seller_listing_remove.html",
+                           listing=listing,
+                           bid_count=0,
+                           email=session["email"])
+
 @app.route("/buyer")
 def buyer():
     return render_template("buyer_welcome.html")

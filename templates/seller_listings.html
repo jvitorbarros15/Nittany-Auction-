@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Seller Listings - NittanyAuction</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+    <div class="container">
+        <h2>My Auction Listings</h2>
+        <h3>Active</h3>
+        <ul>
+            {% for listing in active_listings %}
+            <li>{{ listing.title }} <a href="/edit_listing/{{ listing.id }}">Edit</a> <a
+                    href="/remove_listing/{{ listing.id }}">Remove</a></li>
+            {% endfor %}
+        </ul>
+        <h3>Inactive</h3>
+        <ul>
+            {% for listing in inactive_listings %}
+            <li>{{ listing.title }} (Removed: {{ listing.removal_reason }}, Remaining Bids: {{ listing.remaining_bids
+                }})</li>
+            {% endfor %}
+        </ul>
+        <h3>Sold</h3>
+        <ul>
+            {% for listing in sold_listings %}
+            <li>{{ listing.title }}</li>
+            {% endfor %}
+        </ul>
+        <a href="/create_listing">Create New Listing</a>
+    </div>
+</body>
+
+</html>

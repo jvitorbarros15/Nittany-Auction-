@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Rate Seller - NittanyAuction</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+    <div class="container">
+        <h2>Rate Seller</h2>
+        <form method="POST" action="/rate_seller/{{ auction_id }}">
+            <label for="rating">Your Rating (1-5):</label>
+            <select id="rating" name="rating" required>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+            </select>
+            <label for="comment">Comment:</label>
+            <textarea id="comment" name="comment"></textarea>
+            <button type="submit">Submit Rating</button>
+        </form>
+        <div class="message">{{ message }}</div>
+    </div>
+</body>
+
+</html>

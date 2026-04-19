@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Browse Categories - NittanyAuction</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+    <div class="container">
+        <h2>Browse Categories</h2>
+        <div id="category-path">Current: {{ category_path }}</div>
+        <ul id="subcategories">
+            <!-- Dynamically list subcategories here -->
+            {% for subcat in subcategories %}
+            <li><a href="/category/{{ subcat.id }}">{{ subcat.name }}</a></li>
+            {% endfor %}
+        </ul>
+        <h3>Products in this category</h3>
+        <ul id="products">
+            <!-- Dynamically list products here -->
+            {% for product in products %}
+            <li><a href="/product/{{ product.id }}">{{ product.title }}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+</body>
+
+</html>

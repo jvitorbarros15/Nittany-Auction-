@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Auction Detail - NittanyAuction</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+    <div class="container">
+        <h2>{{ product.title }}</h2>
+        <p>Category: {{ product.category }}</p>
+        <p>Seller: {{ product.seller }} (Avg. Rating: {{ product.seller_rating }})</p>
+        <p>Condition: {{ product.condition }}</p>
+        <p>Reserve Price: ${{ product.reserve_price }}</p>
+        <p>Current Highest Bid: ${{ product.highest_bid }}</p>
+        <p>Remaining Bids: {{ product.remaining_bids }}</p>
+        <p>Status: {{ product.status }}</p>
+        <h3>Place a Bid</h3>
+        <form method="POST" action="/bid/{{ product.id }}">
+            <label for="bid_amount">Your Bid ($):</label>
+            <input type="number" id="bid_amount" name="bid_amount" min="{{ product.highest_bid|add:1 }}" required>
+            <button type="submit">Place Bid</button>
+        </form>
+        <div class="message">{{ bid_message }}</div>
+        <h3>Reviews</h3>
+        <ul>
+            {% for review in product.reviews %}
+            <li>{{ review.buyer }}: {{ review.rating }}/5 - {{ review.comment }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Update Profile - NittanyAuction</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+    <div class="container">
+        <h2>Update Profile</h2>
+        <form method="POST" action="/profile_update">
+            <label for="email">Email (cannot change):</label>
+            <input type="email" id="email" name="email" value="{{ user.email }}" disabled>
+            <!-- Add other personal info fields here -->
+            <label for="password">New Password:</label>
+            <input type="password" id="password" name="password">
+            <button type="submit">Save Changes</button>
+        </form>
+        <div class="message">{{ message }}</div>
+        <p>Need to change your email? <a href="/request_email_change">Contact HelpDesk</a></p>
+    </div>
+</body>
+
+</html>

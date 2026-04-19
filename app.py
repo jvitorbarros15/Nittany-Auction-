@@ -46,12 +46,11 @@ def login():
 
     return render_template("login.html")
 
-def seller_required():
-    if session.get("role") != "seller":
-        flash("Please log in as a seller to access that page.", "error")
+def role_required(role):
+    if session.get("role") != role:
+        flash(f"Please log in as {role} to access that page.", "error")
         return redirect("/login")
     return None
-
 
 @app.route("/logout")
 def logout():
@@ -62,10 +61,47 @@ def logout():
 
 @app.route("/seller")
 def seller():
-    guard = seller_required()
+    guard = role_required("seller")
     if guard:
         return guard
     return render_template("seller_welcome.html", email=session["email"])
+
+@app.route("/seller/listings/new", methods=["GET", "POST"])
+def seller_listing_new():
+    guard = role_required("seller")
+    if guard:
+        return guard
+
+    if request.method == "POST":
+        title             = request.form["title"]
+        description       = request.form["description"]
+        condition         = request.form["condition"]
+        category_id       = int(request.form["category_id"])
+        reserve_price     = float(request.form["reserve_price"])
+        auction_stop_time = request.form["auction_stop_time"]
+        seller_email      = session["email"]
+
+        with sqlite3.connect("nittanyauction.db") as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO listings 
+                    (seller_email, title, description, condition, category_id, reserve_price, auction_stop_time, status)
+                VALUES (?, ?, ?, ?, ?, ?, ?, 'active')
+            """, (seller_email, title, description, condition, category_id, reserve_price, auction_stop_time))
+            conn.commit()
+
+        flash("Listing created successfully.", "success")
+        return redirect("/seller/listings")
+
+    # Fetch categories to populate the dropdown
+    with sqlite3.connect("nittanyauction.db") as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT category_id, category_name FROM categories")
+        categories = [{"category_id": row[0], "category_name": row[1]} for row in cursor.fetchall()]
+
+    return render_template("seller_listing_new.html",
+                           categories=categories,
+                           email=session["email"])
 
 @app.route("/buyer")
 def buyer():

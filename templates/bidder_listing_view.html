@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ listing['title'] }} — NittanyAuction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="first-navbar">
+        <img src="{{ url_for('static', filename='logo.svg') }}" alt="NittanyAuction" height="36">
+        <div class="nav-links">
+            <span class="nav-user">{{ email }}</span>
+            <a href="/bidder/listings">← Listings</a>
+            <a href="/bidder">Dashboard</a>
+            <a href="/logout">Logout</a>
+        </div>
+    </nav>
+
+    <div class="seller-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <div class="listing-detail">
+            <h2>{{ listing['title'] }}</h2>
+
+            <div class="listing-tags">
+                <span class="tag">{{ listing['condition'] }}</span>
+                <span class="tag">{{ listing['category_name'] or 'Uncategorized' }}</span>
+                <span class="tag">Reserve: ${{ "%.2f"|format(listing['reserve_price']) }}</span>
+            </div>
+
+            <p class="listing-description">{{ listing['description'] }}</p>
+
+            <p class="listing-seller">Sold by: <strong>{{ listing['seller_email'] }}</strong></p>
+
+            <!-- Bid status box -->
+            <div class="bid-box">
+                <div class="bid-box-label">Current Highest Bid</div>
+                <div class="bid-box-amount">
+                    {% if top_bid %}${{ "%.2f"|format(top_bid) }}{% else %}No bids yet{% endif %}
+                </div>
+                {% if my_bid %}
+                <div class="bid-box-sub">Your bid: ${{ "%.2f"|format(my_bid) }}
+                    {% if my_bid == top_bid %}<span style="color:#2e7d32; font-weight:600;"> — You're winning!</span>{% endif %}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Auction status -->
+            {% if auction_ended %}
+                {% if is_winner and not transaction %}
+                <div class="winner-box">
+                    <h3>You won this auction!</h3>
+                    <p>Winning bid: <strong>${{ "%.2f"|format(top_bid) }}</strong> — Complete your payment to claim the item.</p>
+                </div>
+                {% elif is_winner and transaction %}
+                <div class="winner-box">
+                    <h3>Purchase complete</h3>
+                    <p>You paid ${{ "%.2f"|format(top_bid) }} for this item.</p>
+                </div>
+                {% else %}
+                <div class="auction-ended-box">
+                    Auction ended {{ listing['auction_stop_time'].replace('T', ' ') }}. You did not win this auction.
+                </div>
+                {% endif %}
+            {% else %}
+            <p style="font-size:13px; color:#888; margin-bottom:8px;">
+                Auction ends: <strong>{{ listing['auction_stop_time'].replace('T', ' ') }}</strong>
+            </p>
+            {% endif %}
+
+            <!-- Action buttons -->
+            <div class="detail-actions">
+                {% if not auction_ended %}
+                    <a href="/bidder/listings/{{ listing['listing_id'] }}/bid" class="btn-primary">Place a Bid</a>
+                    <a href="/bidder/listings/{{ listing['listing_id'] }}/question" class="btn-secondary">Ask a Question</a>
+                {% elif is_winner and not transaction %}
+                    <a href="/bidder/listings/{{ listing['listing_id'] }}/pay" class="btn-primary">Pay Now</a>
+                {% elif is_winner and transaction and not rated %}
+                    <a href="/bidder/listings/{{ listing['listing_id'] }}/rate" class="btn-secondary">Rate Seller</a>
+                {% endif %}
+                <a href="/bidder/listings" class="btn-secondary">Back to Listings</a>
+            </div>
+
+            <!-- Questions this bidder has asked -->
+            {% if my_questions %}
+            <div class="questions-section">
+                <h3>Your Questions</h3>
+                {% for q in my_questions %}
+                <div class="question-item">
+                    {{ q['question_text'] }}
+                    <div class="q-time">Sent {{ q['asked_at'][:16].replace('T', ' ') }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

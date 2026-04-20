@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ask a Question — NittanyAuction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="first-navbar">
+        <img src="{{ url_for('static', filename='logo.svg') }}" alt="NittanyAuction" height="36">
+        <div class="nav-links">
+            <span class="nav-user">{{ email }}</span>
+            <a href="/bidder/listings/{{ listing['listing_id'] }}">← Listing</a>
+            <a href="/logout">Logout</a>
+        </div>
+    </nav>
+
+    <div class="seller-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <div class="form-card">
+            <h2>Ask a Question</h2>
+            <p style="font-size:14px; color:#555; margin-bottom:24px;">
+                About: <strong>{{ listing['title'] }}</strong><br>
+                <span style="color:#aaa;">Seller: {{ listing['seller_email'] }}</span>
+            </p>
+
+            <form method="POST" action="/bidder/listings/{{ listing['listing_id'] }}/question">
+                <div class="form-group">
+                    <label for="question_text">Your Question</label>
+                    <textarea id="question_text" name="question_text" rows="4"
+                              placeholder="Type your question for the seller here..." required></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Send Question</button>
+                    <a href="/bidder/listings/{{ listing['listing_id'] }}" class="btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

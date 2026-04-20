@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Rate Seller — NittanyAuction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="first-navbar">
+        <img src="{{ url_for('static', filename='logo.svg') }}" alt="NittanyAuction" height="36">
+        <div class="nav-links">
+            <span class="nav-user">{{ email }}</span>
+            <a href="/bidder">Dashboard</a>
+            <a href="/logout">Logout</a>
+        </div>
+    </nav>
+
+    <div class="seller-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <div class="form-card">
+            <h2>Rate the Seller</h2>
+            <p style="font-size:14px; color:#555; margin-bottom:4px;">
+                Item: <strong>{{ listing['title'] }}</strong>
+            </p>
+            <p style="font-size:13px; color:#aaa; margin-bottom:28px;">
+                Seller: {{ listing['seller_email'] }} &nbsp;|&nbsp; You paid: ${{ "%.2f"|format(transaction['amount']) }}
+            </p>
+
+            <form method="POST" action="/bidder/listings/{{ listing['listing_id'] }}/rate">
+                <div class="form-group">
+                    <label>Your Rating</label>
+                    <!-- Stars are reversed in CSS (row-reverse) so 5 is on the left visually -->
+                    <div class="star-group">
+                        <input type="radio" id="s5" name="stars" value="5" required>
+                        <label for="s5" title="5 stars">★</label>
+                        <input type="radio" id="s4" name="stars" value="4">
+                        <label for="s4" title="4 stars">★</label>
+                        <input type="radio" id="s3" name="stars" value="3">
+                        <label for="s3" title="3 stars">★</label>
+                        <input type="radio" id="s2" name="stars" value="2">
+                        <label for="s2" title="2 stars">★</label>
+                        <input type="radio" id="s1" name="stars" value="1">
+                        <label for="s1" title="1 star">★</label>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Submit Rating</button>
+                    <a href="/bidder" class="btn-secondary">Skip</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

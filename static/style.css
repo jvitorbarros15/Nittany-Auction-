@@ -338,3 +338,617 @@ body {
     color: #888;
     line-height: 1.5;
 }
+
+/* ── Buttons ── */
+.btn-primary,
+.btn-primary:visited {
+    display: inline-block;
+    padding: 10px 22px;
+    background-color: #e08311;
+    color: white;
+    border: none;
+    border-radius: 7px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    text-decoration: none;
+    transition: opacity 0.2s, transform 0.15s;
+}
+
+.btn-primary:hover {
+    opacity: 0.88;
+    transform: translateY(-1px);
+}
+
+.btn-secondary,
+.btn-secondary:visited {
+    display: inline-block;
+    padding: 10px 22px;
+    background-color: #eaeaf0;
+    color: #333;
+    border: none;
+    border-radius: 7px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 0.2s;
+}
+
+.btn-secondary:hover {
+    background-color: #d8d8e4;
+}
+
+.btn-danger,
+.btn-danger:visited {
+    display: inline-block;
+    padding: 10px 22px;
+    background-color: #e53935;
+    color: white;
+    border: none;
+    border-radius: 7px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    text-decoration: none;
+    transition: opacity 0.2s;
+}
+
+.btn-danger:hover {
+    opacity: 0.88;
+}
+
+/* ── Form card ── */
+.form-card {
+    background: white;
+    border-radius: 12px;
+    padding: 36px 40px;
+    max-width: 680px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+
+.form-card h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1e1e2f;
+    margin-bottom: 28px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #444;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    padding: 10px 14px;
+    border-radius: 7px;
+    border: 1.5px solid #ddd;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    border-color: #e08311;
+}
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-top: 8px;
+    flex-wrap: wrap;
+}
+
+/* ── Listings (seller + bidder shared) ── */
+.listings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+}
+
+.listings-header h2 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1e1e2f;
+}
+
+.listings-section {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+}
+
+.listings-section h3 {
+    font-size: 12px;
+    font-weight: 700;
+    color: #888;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+}
+
+.listings-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.listings-table th {
+    text-align: left;
+    padding: 10px 12px;
+    font-weight: 600;
+    color: #555;
+    border-bottom: 2px solid #f0f0f0;
+    white-space: nowrap;
+}
+
+.listings-table td {
+    padding: 12px;
+    border-bottom: 1px solid #f5f5f5;
+    color: #333;
+}
+
+.listings-table tr:last-child td {
+    border-bottom: none;
+}
+
+.listing-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.empty-state {
+    color: #bbb;
+    font-size: 14px;
+    padding: 8px 0;
+}
+
+/* ── Blocked edit ── */
+.blocked-edit-box {
+    background: #fff8e1;
+    border: 1px solid #ffe082;
+    border-radius: 10px;
+    padding: 28px 32px;
+    max-width: 560px;
+}
+
+.blocked-edit-box h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #c87d00;
+    margin-bottom: 8px;
+}
+
+.blocked-edit-box p {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 20px;
+}
+
+/* ── Remove card ── */
+.remove-card {
+    background: white;
+    border-radius: 12px;
+    padding: 32px 36px;
+    max-width: 560px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+
+.remove-card h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1e1e2f;
+    margin-bottom: 10px;
+}
+
+.remove-warning {
+    background: #fdecea;
+    border: 1px solid #f5c6cb;
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-size: 14px;
+    color: #c0392b;
+    margin: 16px 0 24px;
+    line-height: 1.6;
+}
+
+/* ── Bidder browse grid ── */
+.browse-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.browse-header h2 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1e1e2f;
+}
+
+.category-filter {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: #555;
+}
+
+.category-filter select {
+    padding: 8px 14px;
+    border-radius: 7px;
+    border: 1.5px solid #ddd;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+}
+
+.listing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.listing-card {
+    background: white;
+    border-radius: 12px;
+    padding: 22px 24px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.listing-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+}
+
+.listing-card-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e1e2f;
+}
+
+.listing-card-category {
+    font-size: 12px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.listing-card-price {
+    font-size: 20px;
+    font-weight: 700;
+    color: #e08311;
+    margin-top: 4px;
+}
+
+.listing-card-meta {
+    font-size: 13px;
+    color: #777;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+}
+
+.listing-card-end {
+    font-size: 12px;
+    color: #aaa;
+    margin-top: auto;
+    padding-top: 8px;
+}
+
+/* ── Bidder listing detail ── */
+.listing-detail {
+    background: white;
+    border-radius: 12px;
+    padding: 36px 40px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+
+.listing-detail h2 {
+    font-size: 26px;
+    font-weight: 700;
+    color: #1e1e2f;
+    margin-bottom: 12px;
+}
+
+.listing-tags {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.tag {
+    font-size: 12px;
+    font-weight: 600;
+    background: #f0f0f7;
+    color: #555;
+    padding: 4px 12px;
+    border-radius: 20px;
+}
+
+.listing-description {
+    font-size: 14px;
+    color: #444;
+    line-height: 1.7;
+    margin-bottom: 24px;
+}
+
+.listing-seller {
+    font-size: 13px;
+    color: #888;
+    margin-bottom: 24px;
+}
+
+.bid-box {
+    background: #f7f7fb;
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+}
+
+.bid-box-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.bid-box-amount {
+    font-size: 30px;
+    font-weight: 700;
+    color: #e08311;
+}
+
+.bid-box-sub {
+    font-size: 13px;
+    color: #999;
+    margin-top: 4px;
+}
+
+.winner-box {
+    background: #e6f4ea;
+    border: 1px solid #a5d6a7;
+    border-radius: 10px;
+    padding: 18px 22px;
+    margin-bottom: 20px;
+}
+
+.winner-box h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #2e7d32;
+    margin-bottom: 4px;
+}
+
+.winner-box p {
+    font-size: 13px;
+    color: #388e3c;
+}
+
+.auction-ended-box {
+    background: #f5f5f5;
+    border-radius: 10px;
+    padding: 18px 22px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    color: #888;
+}
+
+.detail-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.questions-section {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.questions-section h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #555;
+    margin-bottom: 12px;
+}
+
+.question-item {
+    background: #f7f7fb;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.question-item .q-time {
+    font-size: 12px;
+    color: #aaa;
+    margin-top: 4px;
+}
+
+/* ── Credit card list ── */
+.card-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 32px;
+}
+
+.card-item {
+    background: white;
+    border-radius: 10px;
+    padding: 16px 20px;
+    box-shadow: 0 1px 8px rgba(0,0,0,0.07);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+
+.card-item-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    color: #333;
+}
+
+.card-type-badge {
+    font-size: 11px;
+    font-weight: 700;
+    background: #1e1e2f;
+    color: white;
+    padding: 3px 10px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ── Alert sections on dashboard ── */
+.alert-section {
+    background: white;
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-top: 28px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+}
+
+.alert-section h3 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+}
+
+.alert-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 14px;
+    color: #333;
+}
+
+.alert-item:last-child {
+    border-bottom: none;
+}
+
+.alert-item-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-shrink: 0;
+}
+
+/* ── Seller application ── */
+.application-card {
+    background: white;
+    border-radius: 12px;
+    padding: 36px 40px;
+    max-width: 560px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+
+.application-card h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1e1e2f;
+    margin-bottom: 10px;
+}
+
+.application-card p {
+    font-size: 14px;
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 24px;
+}
+
+.pending-badge {
+    display: inline-block;
+    background: #fff3e0;
+    color: #e08311;
+    border: 1px solid #ffe0b2;
+    border-radius: 8px;
+    padding: 12px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+/* ── Star rating ── */
+.star-group {
+    display: flex;
+    gap: 8px;
+    margin: 8px 0 20px;
+}
+
+.star-group input[type="radio"] {
+    display: none;
+}
+
+.star-group label {
+    font-size: 32px;
+    cursor: pointer;
+    color: #ddd;
+    transition: color 0.15s;
+    line-height: 1;
+}
+
+.star-group input[type="radio"]:checked ~ label,
+.star-group label:hover,
+.star-group label:hover ~ label {
+    color: #e08311;
+}
+
+.star-group {
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+}
+
+.star-group label:hover,
+.star-group label:hover ~ label,
+.star-group input[type="radio"]:checked ~ label {
+    color: #e08311;
+}

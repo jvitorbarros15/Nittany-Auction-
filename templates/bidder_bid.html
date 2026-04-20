@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Place a Bid — NittanyAuction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="first-navbar">
+        <img src="{{ url_for('static', filename='logo.svg') }}" alt="NittanyAuction" height="36">
+        <div class="nav-links">
+            <span class="nav-user">{{ email }}</span>
+            <a href="/bidder/listings/{{ listing['listing_id'] }}">← Listing</a>
+            <a href="/logout">Logout</a>
+        </div>
+    </nav>
+
+    <div class="seller-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <div class="form-card">
+            <h2>Place a Bid</h2>
+            <p style="font-size:14px; color:#555; margin-bottom:24px;">
+                <strong>{{ listing['title'] }}</strong>
+            </p>
+
+            <div class="bid-box" style="margin-bottom:28px;">
+                <div class="bid-box-label">Current Highest Bid</div>
+                <div class="bid-box-amount">
+                    {% if top_bid %}${{ "%.2f"|format(top_bid) }}{% else %}No bids yet{% endif %}
+                </div>
+                <div class="bid-box-sub">Reserve price: ${{ "%.2f"|format(listing['reserve_price']) }}</div>
+            </div>
+
+            <form method="POST" action="/bidder/listings/{{ listing['listing_id'] }}/bid">
+                <div class="form-group">
+                    <label for="bid_amount">Your Bid ($)</label>
+                    <input type="number" id="bid_amount" name="bid_amount"
+                           step="0.01" min="{{ '%.2f'|format(min_bid) }}"
+                           placeholder="{{ '%.2f'|format(min_bid) }}" required autofocus>
+                    <span style="font-size:12px; color:#aaa; margin-top:2px;">
+                        Minimum bid: ${{ "%.2f"|format(min_bid) }}
+                    </span>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Confirm Bid</button>
+                    <a href="/bidder/listings/{{ listing['listing_id'] }}" class="btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bidder Dashboard — NittanyAuction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="first-navbar">
+        <img src="{{ url_for('static', filename='logo.svg') }}" alt="NittanyAuction" height="36">
+        <div class="nav-links">
+            <span class="nav-user">{{ email }}</span>
+            <a href="/bidder/listings">Browse</a>
+            <a href="/bidder/profile">Profile</a>
+            <a href="/bidder/cards">Cards</a>
+            <a href="/logout">Logout</a>
+        </div>
+    </nav>
+
+    <div class="seller-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <h2>Bidder Dashboard</h2>
+        <p class="seller-subtitle">Welcome back, {{ email }}</p>
+
+        <div class="dashboard-cards">
+            <a href="/bidder/listings" class="dashboard-card">
+                <div class="card-icon">🔍</div>
+                <div class="card-label">Browse Listings</div>
+                <div class="card-desc">Find items to bid on by category</div>
+            </a>
+            <a href="/bidder/profile" class="dashboard-card">
+                <div class="card-icon">👤</div>
+                <div class="card-label">My Profile</div>
+                <div class="card-desc">View and update your personal info</div>
+            </a>
+            <a href="/bidder/cards" class="dashboard-card">
+                <div class="card-icon">💳</div>
+                <div class="card-label">My Cards</div>
+                <div class="card-desc">Manage your payment methods</div>
+            </a>
+            <a href="/bidder/apply-seller" class="dashboard-card">
+                <div class="card-icon">📋</div>
+                <div class="card-label">Become a Seller</div>
+                <div class="card-desc">Submit an application to HelpDesk</div>
+            </a>
+        </div>
+
+        {% if won_auctions %}
+        <div class="alert-section">
+            <h3>Auctions Won — Payment Required</h3>
+            {% for item in won_auctions %}
+            <div class="alert-item">
+                <span>{{ item['title'] }}</span>
+                <div class="alert-item-right">
+                    <span style="font-weight:700; color:#e08311;">${{ "%.2f"|format(item['winning_bid']) }}</span>
+                    <a href="/bidder/listings/{{ item['listing_id'] }}/pay" class="btn-primary" style="font-size:13px; padding:6px 16px;">Pay Now</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if pending_ratings %}
+        <div class="alert-section">
+            <h3>Rate Your Sellers</h3>
+            {% for item in pending_ratings %}
+            <div class="alert-item">
+                <span>{{ item['title'] }}</span>
+                <div class="alert-item-right">
+                    <span style="color:#888;">${{ "%.2f"|format(item['amount']) }} paid</span>
+                    <a href="/bidder/listings/{{ item['listing_id'] }}/rate" class="btn-secondary" style="font-size:13px; padding:6px 16px;">Rate Seller</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

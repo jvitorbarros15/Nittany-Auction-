@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Become a Seller — NittanyAuction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="first-navbar">
+        <img src="{{ url_for('static', filename='logo.svg') }}" alt="NittanyAuction" height="36">
+        <div class="nav-links">
+            <span class="nav-user">{{ email }}</span>
+            <a href="/bidder">Dashboard</a>
+            <a href="/logout">Logout</a>
+        </div>
+    </nav>
+
+    <div class="seller-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <div class="application-card">
+            <h2>Become a Seller</h2>
+            <p>
+                Want to list your own items on NittanyAuction? Submit an application and our HelpDesk
+                team will review it and get back to you. Once approved, you'll have full access to
+                create and manage auction listings.
+            </p>
+
+            {% if existing %}
+            <div class="pending-badge">
+                Application submitted — pending HelpDesk review
+            </div>
+            <p style="font-size:13px; color:#aaa;">
+                Submitted on {{ existing['submitted_at'][:10] }}. We'll notify you when it's reviewed.
+            </p>
+            <a href="/bidder" class="btn-secondary">Back to Dashboard</a>
+
+            {% else %}
+            <form method="POST" action="/bidder/apply-seller">
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Submit Application</button>
+                    <a href="/bidder" class="btn-secondary">Cancel</a>
+                </div>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Browse Listings — NittanyAuction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="first-navbar">
+        <img src="{{ url_for('static', filename='logo.svg') }}" alt="NittanyAuction" height="36">
+        <div class="nav-links">
+            <span class="nav-user">{{ email }}</span>
+            <a href="/bidder">Dashboard</a>
+            <a href="/logout">Logout</a>
+        </div>
+    </nav>
+
+    <div class="seller-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <div class="browse-header">
+            <h2>Browse Listings</h2>
+            <form method="GET" action="/bidder/listings" class="category-filter">
+                <label for="cat">Category:</label>
+                <select id="cat" name="category_id" onchange="this.form.submit()">
+                    <option value="">All Categories</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat['category_id'] }}"
+                        {% if selected_category == cat['category_id'] %}selected{% endif %}>
+                        {{ cat['category_name'] }}
+                    </option>
+                    {% endfor %}
+                </select>
+                {% if selected_category %}
+                <a href="/bidder/listings" class="btn-secondary" style="font-size:13px; padding:6px 14px;">Clear</a>
+                {% endif %}
+            </form>
+        </div>
+
+        {% if listings %}
+        <div class="listing-grid">
+            {% for listing in listings %}
+            <a href="/bidder/listings/{{ listing['listing_id'] }}" class="listing-card">
+                <div class="listing-card-category">{{ listing['category_name'] or 'Uncategorized' }}</div>
+                <div class="listing-card-title">{{ listing['title'] }}</div>
+                <div class="listing-card-price">
+                    {% if listing['current_bid'] %}
+                        ${{ "%.2f"|format(listing['current_bid']) }}
+                    {% else %}
+                        ${{ "%.2f"|format(listing['reserve_price']) }}
+                    {% endif %}
+                </div>
+                <div class="listing-card-meta">
+                    <span>{{ listing['condition'] }}</span>
+                    <span>{{ listing['bid_count'] }} bid{{ 's' if listing['bid_count'] != 1 }}</span>
+                </div>
+                <div class="listing-card-end">
+                    Ends {{ listing['auction_stop_time'].replace('T', ' ') }}
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="empty-state" style="margin-top:32px;">
+            {% if selected_category %}No active listings in this category.{% else %}No active listings at the moment.{% endif %}
+        </p>
+        {% endif %}
+    </div>
+</body>
+</html>

@@ -66,9 +66,10 @@
                 </div>
                 {% endif %}
             {% else %}
-            <p style="font-size:13px; color:#888; margin-bottom:8px;">
-                Auction ends: <strong>{{ listing['auction_stop_time'].replace('T', ' ') }}</strong>
-            </p>
+            <div class="bid-timer-row">
+                <span style="font-size:13px; color:#888;">Time remaining:</span>
+                <strong class="bid-timer" data-end="{{ listing['auction_stop_time'] }}">⏱ …</strong>
+            </div>
             {% endif %}
 
             <!-- Action buttons -->
@@ -106,5 +107,6 @@
             {% endif %}
         </div>
     </div>
+    <script src="{{ url_for('static', filename='timer.js') }}"></script>
 </body>
 </html>

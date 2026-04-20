@@ -55,17 +55,17 @@
 <!-- ── Stats Bar ── -->
 <section class="hp-stats">
     <div class="hp-stat">
-        <span class="hp-stat-number">128</span>
+        <span class="hp-stat-number">{{ live_count }}</span>
         <span class="hp-stat-label">Live Auctions</span>
     </div>
     <div class="hp-stat-divider"></div>
     <div class="hp-stat">
-        <span class="hp-stat-number">43</span>
+        <span class="hp-stat-number">{{ seller_count }}</span>
         <span class="hp-stat-label">Active Sellers</span>
     </div>
     <div class="hp-stat-divider"></div>
     <div class="hp-stat">
-        <span class="hp-stat-number">1,204</span>
+        <span class="hp-stat-number">{{ "{:,}".format(bid_count) }}</span>
         <span class="hp-stat-label">Bids Placed</span>
     </div>
     <div class="hp-stat-divider"></div>
@@ -90,125 +90,33 @@
         <button class="hp-carousel-btn hp-carousel-prev" onclick="slideCarousel('live', -1)">&#8592;</button>
         <div class="hp-carousel" id="carousel-live">
 
+            {% for listing in carousel_listings %}
             <div class="hp-auction-card">
                 <div class="hp-ac-top">
-                    <span class="hp-ac-category">Electronics</span>
-                    <span class="hp-ac-timer hp-timer-hot">⏱ 38m left</span>
+                    <span class="hp-ac-category">
+                        {% if listing['parent_category'] %}{{ listing['parent_category'] }} › {% endif %}{{ listing['category_name'] or 'General' }}
+                    </span>
+                    <span class="hp-ac-timer" data-end="{{ listing['auction_stop_time'] }}">⏱ …</span>
+                    {% if listing['promoted'] %}
+                    <span class="hp-ac-timer" style="background:#fff8e1; color:#8a6d00; margin-left:4px;">★ Promoted</span>
+                    {% endif %}
                 </div>
-                <h3 class="hp-ac-title">Vintage Film Camera — Canon AE-1</h3>
-                <p class="hp-ac-desc">Great condition, fully functional. Includes 50mm lens and original strap.</p>
+                <h3 class="hp-ac-title">{{ listing['title'] }}</h3>
                 <div class="hp-ac-footer">
                     <div>
-                        <span class="hp-ac-bid-label">Current Bid</span>
-                        <span class="hp-ac-bid">$142.00</span>
+                        <span class="hp-ac-bid-label">{{ 'Current Bid' if listing['current_bid'] else 'Starting At' }}</span>
+                        <span class="hp-ac-bid">${{ "%.2f"|format(listing['current_bid'] or listing['reserve_price']) }}</span>
                     </div>
                     <div class="hp-ac-meta">
-                        <span>🔨 8 bids</span>
-                        <span>· Seller: john@psu.edu</span>
+                        <span>🔨 {{ listing['bid_count'] }} bid{{ 's' if listing['bid_count'] != 1 }}</span>
+                        <span>· {{ listing['seller_email'] }}</span>
                     </div>
                 </div>
                 <a href="/login" class="btn-primary hp-ac-cta">Bid Now</a>
             </div>
-
-            <div class="hp-auction-card">
-                <div class="hp-ac-top">
-                    <span class="hp-ac-category">Computers</span>
-                    <span class="hp-ac-timer hp-timer-hot">⏱ 1h 12m left</span>
-                </div>
-                <h3 class="hp-ac-title">Mechanical Keyboard — Cherry MX Blue</h3>
-                <p class="hp-ac-desc">Barely used, tenkeyless layout. RGB backlit with USB-C cable included.</p>
-                <div class="hp-ac-footer">
-                    <div>
-                        <span class="hp-ac-bid-label">Current Bid</span>
-                        <span class="hp-ac-bid">$89.50</span>
-                    </div>
-                    <div class="hp-ac-meta">
-                        <span>🔨 5 bids</span>
-                        <span>· Seller: sara@psu.edu</span>
-                    </div>
-                </div>
-                <a href="/login" class="btn-primary hp-ac-cta">Bid Now</a>
-            </div>
-
-            <div class="hp-auction-card">
-                <div class="hp-ac-top">
-                    <span class="hp-ac-category">Art</span>
-                    <span class="hp-ac-timer">⏱ 2d 4h left</span>
-                </div>
-                <h3 class="hp-ac-title">Original Watercolor Print Set (3 pieces)</h3>
-                <p class="hp-ac-desc">Hand-painted series depicting Penn State campus. Signed by the artist.</p>
-                <div class="hp-ac-footer">
-                    <div>
-                        <span class="hp-ac-bid-label">Starting Bid</span>
-                        <span class="hp-ac-bid">$25.00</span>
-                    </div>
-                    <div class="hp-ac-meta">
-                        <span>🔨 0 bids</span>
-                        <span>· Seller: mike@psu.edu</span>
-                    </div>
-                </div>
-                <a href="/login" class="btn-primary hp-ac-cta">Bid Now</a>
-            </div>
-
-            <div class="hp-auction-card">
-                <div class="hp-ac-top">
-                    <span class="hp-ac-category">Books</span>
-                    <span class="hp-ac-timer hp-timer-hot">⏱ 55m left</span>
-                </div>
-                <h3 class="hp-ac-title">Computer Science Textbook Bundle (5 books)</h3>
-                <p class="hp-ac-desc">Data Structures, OS, Algorithms, Networks, and Compilers. Good condition.</p>
-                <div class="hp-ac-footer">
-                    <div>
-                        <span class="hp-ac-bid-label">Current Bid</span>
-                        <span class="hp-ac-bid">$54.00</span>
-                    </div>
-                    <div class="hp-ac-meta">
-                        <span>🔨 3 bids</span>
-                        <span>· Seller: lisa@psu.edu</span>
-                    </div>
-                </div>
-                <a href="/login" class="btn-primary hp-ac-cta">Bid Now</a>
-            </div>
-
-            <div class="hp-auction-card">
-                <div class="hp-ac-top">
-                    <span class="hp-ac-category">Sports</span>
-                    <span class="hp-ac-timer">⏱ 1d 7h left</span>
-                </div>
-                <h3 class="hp-ac-title">Road Bike — Trek FX3 2021</h3>
-                <p class="hp-ac-desc">Size M, lightly ridden, includes lock and pump. Perfect for campus.</p>
-                <div class="hp-ac-footer">
-                    <div>
-                        <span class="hp-ac-bid-label">Current Bid</span>
-                        <span class="hp-ac-bid">$310.00</span>
-                    </div>
-                    <div class="hp-ac-meta">
-                        <span>🔨 12 bids</span>
-                        <span>· Seller: alex@psu.edu</span>
-                    </div>
-                </div>
-                <a href="/login" class="btn-primary hp-ac-cta">Bid Now</a>
-            </div>
-
-            <div class="hp-auction-card">
-                <div class="hp-ac-top">
-                    <span class="hp-ac-category">Clothing</span>
-                    <span class="hp-ac-timer">⏱ 3d left</span>
-                </div>
-                <h3 class="hp-ac-title">Vintage Penn State Varsity Jacket</h3>
-                <p class="hp-ac-desc">Size L, wool body, leather sleeves. 1987 edition. Collector's item.</p>
-                <div class="hp-ac-footer">
-                    <div>
-                        <span class="hp-ac-bid-label">Current Bid</span>
-                        <span class="hp-ac-bid">$67.00</span>
-                    </div>
-                    <div class="hp-ac-meta">
-                        <span>🔨 2 bids</span>
-                        <span>· Seller: carol@psu.edu</span>
-                    </div>
-                </div>
-                <a href="/login" class="btn-primary hp-ac-cta">Bid Now</a>
-            </div>
+            {% else %}
+            <p style="color:#9ca3af; padding:24px;">No active listings right now.</p>
+            {% endfor %}
 
         </div>
         <button class="hp-carousel-btn hp-carousel-next" onclick="slideCarousel('live', 1)">&#8594;</button>
@@ -227,89 +135,27 @@
 
     <div class="hp-grid">
 
+        {% for listing in featured_listings %}
         <a href="/login" class="hp-grid-card">
             <div class="hp-gc-top">
-                <span class="hp-ac-category">Furniture</span>
-                <span class="hp-gc-condition">Like New</span>
+                <span class="hp-ac-category">{{ listing['category_name'] or 'General' }}</span>
+                {% if listing['condition'] %}
+                <span class="hp-gc-condition">{{ listing['condition'] }}</span>
+                {% endif %}
+                {% if listing['promoted'] %}
+                <span class="hp-gc-condition" style="background:#fff8e1; color:#8a6d00; border-color:#ffe082;">★ Promoted</span>
+                {% endif %}
             </div>
-            <h3 class="hp-gc-title">IKEA Standing Desk — Adjustable Height</h3>
-            <p class="hp-gc-desc">Electric height-adjust, white tabletop, 160×80cm. Minor scuff on base.</p>
+            <h3 class="hp-gc-title">{{ listing['title'] }}</h3>
             <div class="hp-gc-price-row">
-                <span class="hp-gc-price">$180.00</span>
-                <span class="hp-gc-bids">4 bids</span>
+                <span class="hp-gc-price">${{ "%.2f"|format(listing['current_bid'] or listing['reserve_price']) }}</span>
+                <span class="hp-gc-bids">{{ listing['bid_count'] }} bid{{ 's' if listing['bid_count'] != 1 }}</span>
             </div>
-            <span class="hp-gc-end">Ends Apr 25, 2026</span>
+            <span class="hp-gc-end" data-end="{{ listing['auction_stop_time'] }}">⏱ …</span>
         </a>
-
-        <a href="/login" class="hp-grid-card">
-            <div class="hp-gc-top">
-                <span class="hp-ac-category">Audio</span>
-                <span class="hp-gc-condition">Good</span>
-            </div>
-            <h3 class="hp-gc-title">Sony WH-1000XM4 Noise-Cancelling Headphones</h3>
-            <p class="hp-gc-desc">All accessories included. Battery life still excellent at ~28h.</p>
-            <div class="hp-gc-price-row">
-                <span class="hp-gc-price">$155.00</span>
-                <span class="hp-gc-bids">9 bids</span>
-            </div>
-            <span class="hp-gc-end">Ends Apr 22, 2026</span>
-        </a>
-
-        <a href="/login" class="hp-grid-card">
-            <div class="hp-gc-top">
-                <span class="hp-ac-category">Gaming</span>
-                <span class="hp-gc-condition">Used</span>
-            </div>
-            <h3 class="hp-gc-title">Nintendo Switch OLED — Neon Edition</h3>
-            <p class="hp-gc-desc">Comes with dock, 2 joy-cons, and 3 game cartridges. Light wear on casing.</p>
-            <div class="hp-gc-price-row">
-                <span class="hp-gc-price">$210.00</span>
-                <span class="hp-gc-bids">14 bids</span>
-            </div>
-            <span class="hp-gc-end">Ends Apr 21, 2026</span>
-        </a>
-
-        <a href="/login" class="hp-grid-card">
-            <div class="hp-gc-top">
-                <span class="hp-ac-category">Clothing</span>
-                <span class="hp-gc-condition">New</span>
-            </div>
-            <h3 class="hp-gc-title">Patagonia Nano Puff Jacket — Medium</h3>
-            <p class="hp-gc-desc">Never worn, tags attached. Navy blue, size M. Retails $230 new.</p>
-            <div class="hp-gc-price-row">
-                <span class="hp-gc-price">$95.00</span>
-                <span class="hp-gc-bids">1 bid</span>
-            </div>
-            <span class="hp-gc-end">Ends Apr 28, 2026</span>
-        </a>
-
-        <a href="/login" class="hp-grid-card">
-            <div class="hp-gc-top">
-                <span class="hp-ac-category">Electronics</span>
-                <span class="hp-gc-condition">Good</span>
-            </div>
-            <h3 class="hp-gc-title">iPad Air 5th Gen — 64GB WiFi</h3>
-            <p class="hp-gc-desc">Space grey, minor scratches on back. Comes with Apple Pencil 2nd gen.</p>
-            <div class="hp-gc-price-row">
-                <span class="hp-gc-price">$370.00</span>
-                <span class="hp-gc-bids">7 bids</span>
-            </div>
-            <span class="hp-gc-end">Ends Apr 23, 2026</span>
-        </a>
-
-        <a href="/login" class="hp-grid-card">
-            <div class="hp-gc-top">
-                <span class="hp-ac-category">Kitchen</span>
-                <span class="hp-gc-condition">Like New</span>
-            </div>
-            <h3 class="hp-gc-title">Instant Pot Duo 7-in-1 — 6 Qt</h3>
-            <p class="hp-gc-desc">Used twice, all accessories and manual included. Perfect for dorm cooking.</p>
-            <div class="hp-gc-price-row">
-                <span class="hp-gc-price">$42.00</span>
-                <span class="hp-gc-bids">0 bids</span>
-            </div>
-            <span class="hp-gc-end">Ends Apr 30, 2026</span>
-        </a>
+        {% else %}
+        <p style="color:#9ca3af; padding:24px; grid-column: 1/-1;">No featured listings right now.</p>
+        {% endfor %}
 
     </div>
 </section>
@@ -325,65 +171,27 @@
 
     <div class="hp-sellers">
 
+        {% for seller in top_sellers %}
         <div class="hp-seller-card">
-            <div class="hp-seller-avatar">JD</div>
+            <div class="hp-seller-avatar">{{ seller['seller_email'][:2].upper() }}</div>
             <div class="hp-seller-info">
-                <span class="hp-seller-name">john@psu.edu</span>
+                <span class="hp-seller-name">{{ seller['seller_email'] }}</span>
                 <div class="hp-seller-stars">
-                    <span class="hp-star filled">★</span><span class="hp-star filled">★</span>
-                    <span class="hp-star filled">★</span><span class="hp-star filled">★</span>
-                    <span class="hp-star filled">★</span>
-                    <span class="hp-seller-rating">5.0</span>
+                    {% for i in range(1, 6) %}
+                        <span class="hp-star {% if i <= seller['avg_stars']|int %}filled{% endif %}">★</span>
+                    {% endfor %}
+                    <span class="hp-seller-rating">{{ seller['avg_stars'] }}</span>
                 </div>
-                <span class="hp-seller-meta">8 active listings</span>
+                <span class="hp-seller-meta">
+                    {{ seller['active_count'] }} active listing{{ 's' if seller['active_count'] != 1 }}
+                    · {{ seller['rating_count'] }} review{{ 's' if seller['rating_count'] != 1 }}
+                </span>
             </div>
             <a href="/login" class="btn-secondary hp-seller-btn">View →</a>
         </div>
-
-        <div class="hp-seller-card">
-            <div class="hp-seller-avatar">SM</div>
-            <div class="hp-seller-info">
-                <span class="hp-seller-name">sara@psu.edu</span>
-                <div class="hp-seller-stars">
-                    <span class="hp-star filled">★</span><span class="hp-star filled">★</span>
-                    <span class="hp-star filled">★</span><span class="hp-star filled">★</span>
-                    <span class="hp-star">★</span>
-                    <span class="hp-seller-rating">4.2</span>
-                </div>
-                <span class="hp-seller-meta">5 active listings</span>
-            </div>
-            <a href="/login" class="btn-secondary hp-seller-btn">View →</a>
-        </div>
-
-        <div class="hp-seller-card">
-            <div class="hp-seller-avatar">MK</div>
-            <div class="hp-seller-info">
-                <span class="hp-seller-name">mike@psu.edu</span>
-                <div class="hp-seller-stars">
-                    <span class="hp-star filled">★</span><span class="hp-star filled">★</span>
-                    <span class="hp-star filled">★</span><span class="hp-star filled">★</span>
-                    <span class="hp-star half">★</span>
-                    <span class="hp-seller-rating">4.7</span>
-                </div>
-                <span class="hp-seller-meta">3 active listings</span>
-            </div>
-            <a href="/login" class="btn-secondary hp-seller-btn">View →</a>
-        </div>
-
-        <div class="hp-seller-card">
-            <div class="hp-seller-avatar">LR</div>
-            <div class="hp-seller-info">
-                <span class="hp-seller-name">lisa@psu.edu</span>
-                <div class="hp-seller-stars">
-                    <span class="hp-star filled">★</span><span class="hp-star filled">★</span>
-                    <span class="hp-star filled">★</span><span class="hp-star filled">★</span>
-                    <span class="hp-star">★</span>
-                    <span class="hp-seller-rating">3.9</span>
-                </div>
-                <span class="hp-seller-meta">6 active listings</span>
-            </div>
-            <a href="/login" class="btn-secondary hp-seller-btn">View →</a>
-        </div>
+        {% else %}
+        <p style="color:#9ca3af; padding:24px;">No rated sellers yet.</p>
+        {% endfor %}
 
     </div>
 </section>
@@ -447,6 +255,7 @@
     </div>
 </footer>
 
+<script src="{{ url_for('static', filename='timer.js') }}"></script>
 <script>
 function slideCarousel(id, dir) {
     const el = document.getElementById('carousel-' + id);

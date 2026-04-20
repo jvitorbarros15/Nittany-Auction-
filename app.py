@@ -10,6 +10,10 @@ app.secret_key = "your_secret_key"
 def init_db():
     conn = sqlite3.connect("nittanyauction.db")
     conn.executescript("""
+        CREATE TABLE IF NOT EXISTS categories (
+            category_id   INTEGER PRIMARY KEY AUTOINCREMENT,
+            category_name TEXT NOT NULL UNIQUE
+        );
         CREATE TABLE IF NOT EXISTS listings (
             listing_id        INTEGER PRIMARY KEY AUTOINCREMENT,
             seller_email      TEXT NOT NULL,
@@ -115,7 +119,68 @@ init_db()
 
 @app.route("/")
 def homepage():
-    return render_template("homepage.html")
+    now = datetime.now().strftime("%Y-%m-%dT%H:%M")
+    with sqlite3.connect("nittanyauction.db") as conn:
+        conn.row_factory = sqlite3.Row
+
+        # Live auctions carousel — most bids, active
+        carousel_listings = conn.execute("""
+            SELECT l.listing_id, l.title, l.seller_email, l.reserve_price,
+                   l.auction_stop_time, l.promoted,
+                   c.category_name, c.parent_category,
+                   (SELECT MAX(bid_amount) FROM bids WHERE listing_id = l.listing_id) AS current_bid,
+                   (SELECT COUNT(*)       FROM bids WHERE listing_id = l.listing_id) AS bid_count
+            FROM listings l
+            LEFT JOIN categories c ON l.category_id = c.category_id
+            WHERE l.status = 'active' AND l.auction_stop_time > ?
+            ORDER BY bid_count DESC, l.promoted DESC
+            LIMIT 10
+        """, (now,)).fetchall()
+
+        # Featured grid — promoted first, then highest current bid, limit 6
+        featured_listings = conn.execute("""
+            SELECT l.listing_id, l.title, l.seller_email, l.reserve_price,
+                   l.auction_stop_time, l.condition, l.promoted,
+                   c.category_name,
+                   (SELECT MAX(bid_amount) FROM bids WHERE listing_id = l.listing_id) AS current_bid,
+                   (SELECT COUNT(*)       FROM bids WHERE listing_id = l.listing_id) AS bid_count
+            FROM listings l
+            LEFT JOIN categories c ON l.category_id = c.category_id
+            WHERE l.status = 'active' AND l.auction_stop_time > ?
+            ORDER BY l.promoted DESC, current_bid DESC, l.reserve_price DESC
+            LIMIT 6
+        """, (now,)).fetchall()
+
+        # Seller spotlight — sellers with ratings, ordered by avg stars
+        top_sellers = conn.execute("""
+            SELECT r.seller_email,
+                   ROUND(AVG(r.stars), 1) AS avg_stars,
+                   COUNT(r.rating_id)     AS rating_count,
+                   (SELECT COUNT(*) FROM listings
+                    WHERE seller_email = r.seller_email AND status = 'active'
+                      AND auction_stop_time > ?) AS active_count
+            FROM ratings r
+            GROUP BY r.seller_email
+            ORDER BY avg_stars DESC, rating_count DESC
+            LIMIT 4
+        """, (now,)).fetchall()
+
+        # Stats
+        live_count = conn.execute(
+            "SELECT COUNT(*) FROM listings WHERE status='active' AND auction_stop_time > ?", (now,)
+        ).fetchone()[0]
+        seller_count = conn.execute(
+            "SELECT COUNT(DISTINCT seller_email) FROM listings WHERE status='active' AND auction_stop_time > ?", (now,)
+        ).fetchone()[0]
+        bid_count = conn.execute("SELECT COUNT(*) FROM bids").fetchone()[0]
+
+    return render_template("homepage.html",
+                           carousel_listings=carousel_listings,
+                           featured_listings=featured_listings,
+                           top_sellers=top_sellers,
+                           live_count=live_count,
+                           seller_count=seller_count,
+                           bid_count=bid_count)
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -487,42 +552,54 @@ def bidder_listings():
     if guard:
         return guard
 
-    category_id = request.args.get("category_id", type=int)
+    category_id     = request.args.get("category_id", type=int)
+    parent_category = request.args.get("parent_category", "").strip()
     now = datetime.now().strftime("%Y-%m-%dT%H:%M")
 
     with sqlite3.connect("nittanyauction.db") as conn:
         conn.row_factory = sqlite3.Row
-        categories = conn.execute(
-            "SELECT * FROM categories ORDER BY category_name"
+
+        all_cats = conn.execute(
+            "SELECT * FROM categories ORDER BY parent_category, category_name"
         ).fetchall()
 
+        # Build {parent: [cat, ...]} for the template dropdown
+        grouped_categories = {}
+        for cat in all_cats:
+            parent = cat["parent_category"] or "Other"
+            grouped_categories.setdefault(parent, []).append(dict(cat))
+
+        base_select = """
+            SELECT l.*, c.category_name, c.parent_category,
+                   (SELECT MAX(bid_amount) FROM bids WHERE listing_id = l.listing_id) AS current_bid,
+                   (SELECT COUNT(*) FROM bids WHERE listing_id = l.listing_id) AS bid_count
+            FROM listings l
+            LEFT JOIN categories c ON l.category_id = c.category_id
+            WHERE l.status = 'active' AND l.auction_stop_time > ?
+        """
+
         if category_id:
-            listings = conn.execute("""
-                SELECT l.*, c.category_name,
-                       (SELECT MAX(bid_amount) FROM bids WHERE listing_id = l.listing_id) AS current_bid,
-                       (SELECT COUNT(*) FROM bids WHERE listing_id = l.listing_id) AS bid_count
-                FROM listings l
-                LEFT JOIN categories c ON l.category_id = c.category_id
-                WHERE l.status = 'active' AND l.auction_stop_time > ?
-                  AND l.category_id = ?
-                ORDER BY l.promoted DESC, l.auction_stop_time ASC
-            """, (now, category_id)).fetchall()
+            listings = conn.execute(
+                base_select + " AND l.category_id = ? ORDER BY l.promoted DESC, l.auction_stop_time ASC",
+                (now, category_id)
+            ).fetchall()
+        elif parent_category:
+            listings = conn.execute(
+                base_select + " AND c.parent_category = ? ORDER BY l.promoted DESC, l.auction_stop_time ASC",
+                (now, parent_category)
+            ).fetchall()
         else:
-            listings = conn.execute("""
-                SELECT l.*, c.category_name,
-                       (SELECT MAX(bid_amount) FROM bids WHERE listing_id = l.listing_id) AS current_bid,
-                       (SELECT COUNT(*) FROM bids WHERE listing_id = l.listing_id) AS bid_count
-                FROM listings l
-                LEFT JOIN categories c ON l.category_id = c.category_id
-                WHERE l.status = 'active' AND l.auction_stop_time > ?
-                ORDER BY l.promoted DESC, l.auction_stop_time ASC
-            """, (now,)).fetchall()
+            listings = conn.execute(
+                base_select + " ORDER BY l.promoted DESC, l.auction_stop_time ASC",
+                (now,)
+            ).fetchall()
 
     return render_template("bidder_listings.html",
                            email=session["email"],
                            listings=listings,
-                           categories=categories,
-                           selected_category=category_id)
+                           grouped_categories=grouped_categories,
+                           selected_category=category_id,
+                           selected_parent=parent_category)
 
 
 @app.route("/bidder/listings/<int:listing_id>")

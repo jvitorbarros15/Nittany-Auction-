@@ -1695,3 +1695,42 @@ body {
     .hp-footer { padding: 40px 24px 0; }
     .hp-footer-inner { gap: 32px; }
 }
+
+/* ── Countdown Timers ── */
+.timer-hot {
+    color: #e53935;
+    font-weight: 600;
+}
+.timer-ended {
+    color: #9ca3af;
+    font-style: italic;
+}
+.listing-card-end[data-end] {
+    font-size: 12px;
+    color: #888;
+}
+.listing-card-end.timer-hot {
+    color: #e53935;
+    font-weight: 600;
+}
+.bid-timer-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.bid-timer {
+    font-size: 15px;
+    color: #4f46e5;
+}
+.bid-timer.timer-hot {
+    color: #e53935;
+}
+.hp-gc-end[data-end] {
+    font-size: 12px;
+    color: #888;
+}
+.hp-gc-end.timer-hot {
+    color: #e53935;
+    font-weight: 600;
+}

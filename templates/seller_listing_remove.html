@@ -1,11 +1,25 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Remove Listing</title>
+    <title>Remove Listing — NittanyAuction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <h2>Remove Listing</h2>
-    <p>Are you sure you want to remove this listing?</p>
-    <a href="/seller/listings">Cancel</a>
+    <nav class="first-navbar">
+        <img src="{{ url_for('static', filename='logo.svg') }}" alt="NittanyAuction" height="36">
+        <div class="nav-links">
+            <span class="nav-user">{{ email }}</span>
+            <a href="/seller/listings">My Listings</a>
+            <a href="/logout">Logout</a>
+        </div>
+    </nav>
+
+    <div class="seller-content"></div>
+        <h2>Remove Listing</h2>
+        <p>Are you sure you want to remove this listing?</p>
+        <a href="/seller/listings">Cancel</a>
+    </div>
+
+
 </body>
 </html>

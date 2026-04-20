@@ -26,12 +26,12 @@
             <form method="POST" action="/bidder/profile">
 
                 <div style="display:flex; gap:20px;">
-                    <div class="form-group" style="flex:1;">
+                    <div class="form-group" style="flex:1; min-width:0;">
                         <label for="first_name">First Name</label>
                         <input type="text" id="first_name" name="first_name"
                                value="{{ profile['first_name'] if profile else '' }}" placeholder="First name">
                     </div>
-                    <div class="form-group" style="flex:1;">
+                    <div class="form-group" style="flex:1; min-width:0;">
                         <label for="last_name">Last Name</label>
                         <input type="text" id="last_name" name="last_name"
                                value="{{ profile['last_name'] if profile else '' }}" placeholder="Last name">
@@ -50,17 +50,17 @@
                 </div>
 
                 <div style="display:flex; gap:20px;">
-                    <div class="form-group" style="flex:2;">
+                    <div class="form-group" style="flex:2; min-width:0;">
                         <label for="city">City</label>
                         <input type="text" id="city" name="city"
                                value="{{ profile['city'] if profile else '' }}" placeholder="Baton Rouge">
                     </div>
-                    <div class="form-group" style="flex:1;">
+                    <div class="form-group" style="flex:1; min-width:0;">
                         <label for="state">State</label>
                         <input type="text" id="state" name="state" maxlength="2"
                                value="{{ profile['state'] if profile else '' }}" placeholder="LA">
                     </div>
-                    <div class="form-group" style="flex:1;">
+                    <div class="form-group" style="flex:1; min-width:0;">
                         <label for="zipcode">ZIP Code</label>
                         <input type="text" id="zipcode" name="zipcode"
                                value="{{ profile['zipcode'] if profile else '' }}" placeholder="70803">
@@ -80,12 +80,12 @@
                 </div>
 
                 <div style="display:flex; gap:20px;">
-                    <div class="form-group" style="flex:1;">
+                    <div class="form-group" style="flex:1; min-width:0;">
                         <label for="age">Age</label>
                         <input type="number" id="age" name="age" min="16" max="120"
                                value="{{ profile['age'] if profile and profile['age'] else '' }}" placeholder="21">
                     </div>
-                    <div class="form-group" style="flex:2;">
+                    <div class="form-group" style="flex:2; min-width:0;">
                         <label for="annual_income">Annual Income ($)</label>
                         <input type="number" id="annual_income" name="annual_income" step="0.01" min="0"
                                value="{{ profile['annual_income'] if profile and profile['annual_income'] else '' }}" placeholder="0.00">

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Listings — NittanyAuction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="first-navbar">
+        <img src="{{ url_for('static', filename='logo.svg') }}" alt="NittanyAuction" height="36">
+        <div class="nav-links">
+            <span class="nav-user">{{ email }}</span>
+            <a href="/seller">Dashboard</a>
+            <a href="/logout">Logout</a>
+        </div>
+    </nav>
+
+    <div class="seller-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <div class="listings-header">
+            <h2>My Listings</h2>
+            <a href="/seller/listings/new" class="btn-primary">+ Create Listing</a>
+        </div>
+
+        <div class="listings-section">
+            <h3>Active</h3>
+            {% if active %}
+            <table class="listings-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Category</th>
+                        <th>Condition</th>
+                        <th>Reserve Price</th>
+                        <th>Max Bids</th>
+                        <th>Bids Placed</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for listing in active %}
+                    <tr>
+                        <td>{{ listing['title'] }}</td>
+                        <td>{{ listing['category'] }}</td>
+                        <td>{{ listing['condition'] }}</td>
+                        <td>${{ "%.2f"|format(listing['reserve_price']) }}</td>
+                        <td>{{ listing['max_bids'] }}</td>
+                        <td>{{ listing['bid_count'] }}</td>
+                        <td>{{ listing['created_at'][:10] }}</td>
+                        <td>
+                            <div class="listing-actions">
+                                {% if listing['bid_count'] == 0 %}
+                                <a href="/seller/listings/{{ listing['listing_id'] }}/edit" class="btn-secondary" style="font-size:13px; padding:5px 12px;">Edit</a>
+                                {% endif %}
+                                <a href="/seller/listings/{{ listing['listing_id'] }}/remove" class="btn-danger">Remove</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="empty-state">No active listings.</p>
+            {% endif %}
+        </div>
+
+        <div class="listings-section">
+            <h3>Inactive</h3>
+            {% if inactive %}
+            <table class="listings-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Category</th>
+                        <th>Condition</th>
+                        <th>Reserve Price</th>
+                        <th>Max Bids</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for listing in inactive %}
+                    <tr>
+                        <td>{{ listing['title'] }}</td>
+                        <td>{{ listing['category'] }}</td>
+                        <td>{{ listing['condition'] }}</td>
+                        <td>${{ "%.2f"|format(listing['reserve_price']) }}</td>
+                        <td>{{ listing['max_bids'] }}</td>
+                        <td>{{ listing['created_at'][:10] }}</td>
+                        <td>
+                            <div class="listing-actions">
+                                <a href="/seller/listings/{{ listing['listing_id'] }}/edit" class="btn-secondary" style="font-size:13px; padding:5px 12px;">Edit</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="empty-state">No inactive listings.</p>
+            {% endif %}
+        </div>
+
+        <div class="listings-section">
+            <h3>Sold</h3>
+            {% if sold %}
+            <table class="listings-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Category</th>
+                        <th>Condition</th>
+                        <th>Reserve Price</th>
+                        <th>Max Bids</th>
+                        <th>Created</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for listing in sold %}
+                    <tr>
+                        <td>{{ listing['title'] }}</td>
+                        <td>{{ listing['category'] }}</td>
+                        <td>{{ listing['condition'] }}</td>
+                        <td>${{ "%.2f"|format(listing['reserve_price']) }}</td>
+                        <td>{{ listing['max_bids'] }}</td>
+                        <td>{{ listing['created_at'][:10] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="empty-state">No sold listings.</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

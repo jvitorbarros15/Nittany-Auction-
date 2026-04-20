@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Remove Listing — NittanyAuction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="first-navbar">
+        <img src="{{ url_for('static', filename='logo.svg') }}" alt="NittanyAuction" height="36">
+        <div class="nav-links">
+            <span class="nav-user">{{ email }}</span>
+            <a href="/seller/listings">My Listings</a>
+            <a href="/logout">Logout</a>
+        </div>
+    </nav>
+
+    <div class="seller-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+        
+     <div class="remove-card">
+            <h2>Remove Listing</h2>
+            <p style="color:#555; font-size:14px;">You are about to remove: <strong>{{ listing['title'] }}</strong></p>
+
+            <div class="remove-warning">
+                This listing will be marked as <strong>inactive</strong> and removed from the market.
+                {% if bid_count > 0 %}
+                It currently has <strong>{{ bid_count }} bid{{ 's' if bid_count != 1 }}</strong> placed.
+                {% else %}
+                It currently has no bids.
+                {% endif %}
+                Remaining bids at removal will be recorded for administrative purposes.
+            </div>
+
+            <!-- we use POST here so the removal only happens when the seller explicitly confirms -->
+            <form method="POST" action="/seller/listings/{{ listing['listing_id'] }}/remove">
+                <div class="form-group">
+                    <label for="removal_reason">Reason for Removal</label>
+                    <textarea id="removal_reason" name="removal_reason" rows="3" placeholder="Please explain why you are removing this listing..." required></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-danger" style="padding:9px 22px; font-size:14px;">Confirm Removal</button>
+                    <a href="/seller/listings" class="btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

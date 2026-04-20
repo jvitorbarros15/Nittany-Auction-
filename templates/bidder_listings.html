@@ -43,8 +43,11 @@
         {% if listings %}
         <div class="listing-grid">
             {% for listing in listings %}
-            <a href="/bidder/listings/{{ listing['listing_id'] }}" class="listing-card">
-                <div class="listing-card-category">{{ listing['category_name'] or 'Uncategorized' }}</div>
+            <a href="/bidder/listings/{{ listing['listing_id'] }}" class="listing-card{% if listing['promoted'] %} listing-card-promoted{% endif %}">
+                <div class="listing-card-category">
+                    {{ listing['category_name'] or 'Uncategorized' }}
+                    {% if listing['promoted'] %}<span class="tag" style="background:#ffe082; color:#8a6d00; margin-left:6px;">Promoted</span>{% endif %}
+                </div>
                 <div class="listing-card-title">{{ listing['title'] }}</div>
                 <div class="listing-card-price">
                     {% if listing['current_bid'] %}

@@ -1,16 +1,40 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>HelpDesk — NittanyAuction</title>
+    <title>HelpDesk Dashboard — NittanyAuction</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <div class="welcome-container">
-        <div class="welcome-card">
-            <span class="role-badge">HelpDesk</span>
-            <h1>Welcome!</h1>
-            <p>You're logged in as a helpdesk agent. Assist users and resolve issues.</p>
-            <a href="/" class="home-link">← Back to Home</a>
+    <nav class="first-navbar">
+        <img src="{{ url_for('static', filename='logo.svg') }}" alt="NittanyAuction" height="36">
+        <div class="nav-links">
+            <span class="nav-user">{{ email }}</span>
+            <a href="/helpdesk/requests">Requests</a>
+            <a href="/logout">Logout</a>
+        </div>
+    </nav>
+
+    <div class="seller-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <h2>HelpDesk Dashboard</h2>
+        <p class="seller-subtitle">Welcome back, {{ email }}</p>
+
+        <div class="dashboard-cards">
+            <a href="/helpdesk/requests" class="dashboard-card">
+                <div class="card-icon">📥</div>
+                <div class="card-label">Unassigned Requests</div>
+                <div class="card-desc">{{ unassigned_count }} waiting to be claimed</div>
+            </a>
+            <a href="/helpdesk/requests" class="dashboard-card">
+                <div class="card-icon">📋</div>
+                <div class="card-label">My Assigned Requests</div>
+                <div class="card-desc">{{ mine_count }} in your queue</div>
+            </a>
         </div>
     </div>
 </body>

@@ -81,6 +81,14 @@
                 {% elif is_winner and transaction and not rated %}
                     <a href="/bidder/listings/{{ listing['listing_id'] }}/rate" class="btn-secondary">Rate Seller</a>
                 {% endif %}
+                <form method="POST" action="/bidder/watchlist" style="margin:0; display:inline;">
+                    <input type="hidden" name="action" value="{{ 'remove' if in_watchlist else 'add' }}">
+                    <input type="hidden" name="listing_id" value="{{ listing['listing_id'] }}">
+                    <input type="hidden" name="next" value="/bidder/listings/{{ listing['listing_id'] }}">
+                    <button type="submit" class="btn-secondary">
+                        {% if in_watchlist %}★ Remove from Watchlist{% else %}☆ Add to Watchlist{% endif %}
+                    </button>
+                </form>
                 <a href="/bidder/listings" class="btn-secondary">Back to Listings</a>
             </div>
 

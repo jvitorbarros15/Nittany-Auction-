@@ -79,7 +79,34 @@ def init_db():
             submitted_at   DATETIME DEFAULT CURRENT_TIMESTAMP,
             status         TEXT DEFAULT 'pending'
         );
+        CREATE TABLE IF NOT EXISTS helpdesk_requests (
+            request_id       INTEGER PRIMARY KEY AUTOINCREMENT,
+            requester_email  TEXT NOT NULL,
+            request_type     TEXT NOT NULL DEFAULT 'add_category',
+            category_name    TEXT,
+            details          TEXT,
+            assigned_to      TEXT NOT NULL DEFAULT 'helpdeskteam@lsu.edu',
+            status           TEXT NOT NULL DEFAULT 'unassigned',
+            submitted_at     DATETIME DEFAULT CURRENT_TIMESTAMP,
+            completed_at     DATETIME
+        );
+        CREATE TABLE IF NOT EXISTS watchlist (
+            watchlist_id  INTEGER PRIMARY KEY AUTOINCREMENT,
+            bidder_email  TEXT NOT NULL,
+            listing_id    INTEGER NOT NULL,
+            added_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(bidder_email, listing_id)
+        );
     """)
+
+    existing_cols = {row[1] for row in conn.execute("PRAGMA table_info(listings)").fetchall()}
+    if "promoted" not in existing_cols:
+        conn.execute("ALTER TABLE listings ADD COLUMN promoted INTEGER DEFAULT 0")
+    if "promoted_at" not in existing_cols:
+        conn.execute("ALTER TABLE listings ADD COLUMN promoted_at DATETIME")
+    if "promotion_fee" not in existing_cols:
+        conn.execute("ALTER TABLE listings ADD COLUMN promotion_fee REAL")
+    conn.commit()
     conn.close()
 
 
@@ -478,7 +505,7 @@ def bidder_listings():
                 LEFT JOIN categories c ON l.category_id = c.category_id
                 WHERE l.status = 'active' AND l.auction_stop_time > ?
                   AND l.category_id = ?
-                ORDER BY l.auction_stop_time ASC
+                ORDER BY l.promoted DESC, l.auction_stop_time ASC
             """, (now, category_id)).fetchall()
         else:
             listings = conn.execute("""
@@ -488,7 +515,7 @@ def bidder_listings():
                 FROM listings l
                 LEFT JOIN categories c ON l.category_id = c.category_id
                 WHERE l.status = 'active' AND l.auction_stop_time > ?
-                ORDER BY l.auction_stop_time ASC
+                ORDER BY l.promoted DESC, l.auction_stop_time ASC
             """, (now,)).fetchall()
 
     return render_template("bidder_listings.html",
@@ -553,6 +580,11 @@ def bidder_listing_view(listing_id):
             (listing_id, email)
         ).fetchall()
 
+        in_watchlist = conn.execute(
+            "SELECT 1 FROM watchlist WHERE bidder_email = ? AND listing_id = ?",
+            (email, listing_id)
+        ).fetchone() is not None
+
     return render_template("bidder_listing_view.html",
                            email=email,
                            listing=listing,
@@ -562,7 +594,8 @@ def bidder_listing_view(listing_id):
                            auction_ended=auction_ended,
                            transaction=transaction,
                            rated=rated,
-                           my_questions=my_questions)
+                           my_questions=my_questions,
+                           in_watchlist=in_watchlist)
 
 
 @app.route("/bidder/listings/<int:listing_id>/bid", methods=["GET", "POST"])
@@ -794,7 +827,240 @@ def bidder_apply_seller():
 
 @app.route("/helpdesk")
 def helpdesk():
-    return render_template("helpdesk_welcome.html")
+    guard = role_required("helpdesk")
+    if guard:
+        return guard
+
+    email = session["email"]
+    with sqlite3.connect("nittanyauction.db") as conn:
+        conn.row_factory = sqlite3.Row
+        unassigned_count = conn.execute(
+            "SELECT COUNT(*) FROM helpdesk_requests WHERE status = 'unassigned'"
+        ).fetchone()[0]
+        mine_count = conn.execute(
+            "SELECT COUNT(*) FROM helpdesk_requests WHERE assigned_to = ? AND status = 'assigned'",
+            (email,)
+        ).fetchone()[0]
+
+    return render_template("helpdesk_welcome.html",
+                           email=email,
+                           unassigned_count=unassigned_count,
+                           mine_count=mine_count)
+
+
+@app.route("/helpdesk/requests")
+def helpdesk_requests():
+    guard = role_required("helpdesk")
+    if guard:
+        return guard
+
+    email = session["email"]
+    with sqlite3.connect("nittanyauction.db") as conn:
+        conn.row_factory = sqlite3.Row
+        unassigned = conn.execute(
+            "SELECT * FROM helpdesk_requests WHERE status = 'unassigned' ORDER BY submitted_at ASC"
+        ).fetchall()
+        mine = conn.execute(
+            "SELECT * FROM helpdesk_requests WHERE assigned_to = ? AND status = 'assigned' ORDER BY submitted_at ASC",
+            (email,)
+        ).fetchall()
+        completed = conn.execute(
+            "SELECT * FROM helpdesk_requests WHERE assigned_to = ? AND status = 'completed' ORDER BY completed_at DESC LIMIT 20",
+            (email,)
+        ).fetchall()
+
+    return render_template("helpdesk_requests.html",
+                           email=email,
+                           unassigned=unassigned,
+                           mine=mine,
+                           completed=completed)
+
+
+@app.route("/helpdesk/requests/<int:request_id>/claim", methods=["POST"])
+def helpdesk_claim(request_id):
+    guard = role_required("helpdesk")
+    if guard:
+        return guard
+
+    email = session["email"]
+    with sqlite3.connect("nittanyauction.db") as conn:
+        row = conn.execute(
+            "SELECT status FROM helpdesk_requests WHERE request_id = ?", (request_id,)
+        ).fetchone()
+        if not row or row[0] != "unassigned":
+            flash("Request is no longer available to claim.", "error")
+            return redirect("/helpdesk/requests")
+        conn.execute(
+            "UPDATE helpdesk_requests SET assigned_to = ?, status = 'assigned' WHERE request_id = ?",
+            (email, request_id)
+        )
+    flash("Request claimed.", "success")
+    return redirect("/helpdesk/requests")
+
+
+@app.route("/helpdesk/requests/<int:request_id>/complete", methods=["POST"])
+def helpdesk_complete(request_id):
+    guard = role_required("helpdesk")
+    if guard:
+        return guard
+
+    email = session["email"]
+    with sqlite3.connect("nittanyauction.db") as conn:
+        conn.row_factory = sqlite3.Row
+        req = conn.execute(
+            "SELECT * FROM helpdesk_requests WHERE request_id = ?", (request_id,)
+        ).fetchone()
+        if not req or req["assigned_to"] != email or req["status"] != "assigned":
+            flash("You cannot complete this request.", "error")
+            return redirect("/helpdesk/requests")
+
+        if req["request_type"] == "add_category" and req["category_name"]:
+            existing = conn.execute(
+                "SELECT category_id FROM categories WHERE LOWER(category_name) = LOWER(?)",
+                (req["category_name"],)
+            ).fetchone()
+            if not existing:
+                conn.execute(
+                    "INSERT INTO categories (category_name) VALUES (?)",
+                    (req["category_name"],)
+                )
+
+        conn.execute(
+            "UPDATE helpdesk_requests SET status = 'completed', completed_at = CURRENT_TIMESTAMP WHERE request_id = ?",
+            (request_id,)
+        )
+
+    flash("Request marked as completed.", "success")
+    return redirect("/helpdesk/requests")
+
+
+@app.route("/seller/category-request", methods=["GET", "POST"])
+def seller_category_request():
+    guard = role_required("seller")
+    if guard:
+        return guard
+
+    email = session["email"]
+
+    if request.method == "POST":
+        category_name = request.form.get("category_name", "").strip()
+        details       = request.form.get("details", "").strip()
+        if not category_name:
+            flash("Please enter a category name.", "error")
+            return redirect("/seller/category-request")
+
+        with sqlite3.connect("nittanyauction.db") as conn:
+            conn.execute("""
+                INSERT INTO helpdesk_requests (requester_email, request_type, category_name, details)
+                VALUES (?, 'add_category', ?, ?)
+            """, (email, category_name, details))
+
+        flash("Your request has been submitted to HelpDesk.", "success")
+        return redirect("/seller/category-request")
+
+    with sqlite3.connect("nittanyauction.db") as conn:
+        conn.row_factory = sqlite3.Row
+        my_requests = conn.execute("""
+            SELECT * FROM helpdesk_requests
+            WHERE requester_email = ? AND request_type = 'add_category'
+            ORDER BY submitted_at DESC
+        """, (email,)).fetchall()
+
+    return render_template("seller_category_request.html",
+                           email=email, my_requests=my_requests)
+
+
+@app.route("/seller/listings/<int:listing_id>/promote", methods=["GET", "POST"])
+def seller_listing_promote(listing_id):
+    guard = role_required("seller")
+    if guard:
+        return guard
+
+    email = session["email"]
+    with sqlite3.connect("nittanyauction.db") as conn:
+        conn.row_factory = sqlite3.Row
+        listing = conn.execute(
+            "SELECT * FROM listings WHERE listing_id = ?", (listing_id,)
+        ).fetchone()
+
+        if not listing or listing["seller_email"] != email:
+            flash("Listing not found.", "error")
+            return redirect("/seller/listings")
+
+        if listing["status"] != "active":
+            flash("Only active listings can be promoted.", "error")
+            return redirect("/seller/listings")
+
+        if listing["promoted"]:
+            flash("This listing is already promoted.", "error")
+            return redirect("/seller/listings")
+
+        fee = round(listing["reserve_price"] * 0.05, 2)
+
+        if request.method == "POST":
+            conn.execute("""
+                UPDATE listings
+                SET promoted = 1, promoted_at = CURRENT_TIMESTAMP, promotion_fee = ?
+                WHERE listing_id = ?
+            """, (fee, listing_id))
+            flash(f"Listing promoted! Fee of ${fee:.2f} recorded.", "success")
+            return redirect("/seller/listings")
+
+    return render_template("seller_listing_promote.html",
+                           email=email, listing=listing, fee=fee)
+
+
+@app.route("/bidder/watchlist", methods=["GET", "POST"])
+def bidder_watchlist():
+    guard = role_required("buyer")
+    if guard:
+        return guard
+
+    email = session["email"]
+    now = datetime.now().strftime("%Y-%m-%dT%H:%M")
+
+    if request.method == "POST":
+        action = request.form.get("action")
+        listing_id = int(request.form["listing_id"])
+        with sqlite3.connect("nittanyauction.db") as conn:
+            if action == "add":
+                conn.execute(
+                    "INSERT OR IGNORE INTO watchlist (bidder_email, listing_id) VALUES (?, ?)",
+                    (email, listing_id)
+                )
+                flash("Added to your watchlist.", "success")
+            elif action == "remove":
+                conn.execute(
+                    "DELETE FROM watchlist WHERE bidder_email = ? AND listing_id = ?",
+                    (email, listing_id)
+                )
+                flash("Removed from your watchlist.", "success")
+        next_url = request.form.get("next") or "/bidder/watchlist"
+        return redirect(next_url)
+
+    with sqlite3.connect("nittanyauction.db") as conn:
+        conn.row_factory = sqlite3.Row
+        items = conn.execute("""
+            SELECT w.listing_id, w.added_at,
+                   l.title, l.seller_email, l.reserve_price, l.max_bids, l.status,
+                   l.auction_stop_time, l.promoted,
+                   c.category_name,
+                   (SELECT MAX(bid_amount) FROM bids WHERE listing_id = l.listing_id) AS current_bid,
+                   (SELECT COUNT(*)       FROM bids WHERE listing_id = l.listing_id) AS bid_count
+            FROM watchlist w
+            JOIN listings l   ON w.listing_id = l.listing_id
+            LEFT JOIN categories c ON l.category_id = c.category_id
+            WHERE w.bidder_email = ?
+            ORDER BY w.added_at DESC
+        """, (email,)).fetchall()
+
+    enriched = []
+    for row in items:
+        d = dict(row)
+        d["is_active"] = (d["status"] == "active" and d["auction_stop_time"] > now)
+        enriched.append(d)
+
+    return render_template("bidder_watchlist.html", email=email, items=enriched)
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -837,4 +1103,4 @@ def register():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, port=5001)

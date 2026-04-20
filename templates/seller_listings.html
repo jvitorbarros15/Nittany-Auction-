@@ -57,6 +57,11 @@
                                 {% if listing['bid_count'] == 0 %}
                                 <a href="/seller/listings/{{ listing['listing_id'] }}/edit" class="btn-secondary" style="font-size:13px; padding:5px 12px;">Edit</a>
                                 {% endif %}
+                                {% if listing['promoted'] %}
+                                <span class="tag" style="background:#ffe082; color:#8a6d00;">Promoted</span>
+                                {% else %}
+                                <a href="/seller/listings/{{ listing['listing_id'] }}/promote" class="btn-secondary" style="font-size:13px; padding:5px 12px;">Promote</a>
+                                {% endif %}
                                 <a href="/seller/listings/{{ listing['listing_id'] }}/remove" class="btn-danger">Remove</a>
                             </div>
                         </td>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Watchlist — NittanyAuction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="first-navbar">
+        <img src="{{ url_for('static', filename='logo.svg') }}" alt="NittanyAuction" height="36">
+        <div class="nav-links">
+            <span class="nav-user">{{ email }}</span>
+            <a href="/bidder">Dashboard</a>
+            <a href="/bidder/listings">Browse</a>
+            <a href="/logout">Logout</a>
+        </div>
+    </nav>
+
+    <div class="seller-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <div class="listings-header">
+            <h2>My Watchlist</h2>
+            <a href="/bidder/listings" class="btn-secondary">Browse More</a>
+        </div>
+
+        <div class="listings-section">
+            <h3>Saved Items ({{ items|length }})</h3>
+            {% if items %}
+            <table class="listings-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Category</th>
+                        <th>Seller</th>
+                        <th>Current Bid</th>
+                        <th>Bids Remaining</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>
+                            <a href="/bidder/listings/{{ item['listing_id'] }}" style="color:#1e1e2f; text-decoration:none; font-weight:600;">
+                                {{ item['title'] }}
+                            </a>
+                            {% if item['promoted'] %}<span class="tag" style="margin-left:8px; background:#ffe082; color:#8a6d00;">Promoted</span>{% endif %}
+                        </td>
+                        <td>{{ item['category_name'] or '—' }}</td>
+                        <td>{{ item['seller_email'] }}</td>
+                        <td>
+                            {% if item['current_bid'] %}
+                                ${{ "%.2f"|format(item['current_bid']) }}
+                            {% else %}
+                                ${{ "%.2f"|format(item['reserve_price']) }} <span style="color:#999; font-size:12px;">(reserve)</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item['max_bids'] and item['max_bids'] > 0 %}
+                                {{ (item['max_bids'] - item['bid_count']) if (item['max_bids'] - item['bid_count']) > 0 else 0 }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item['is_active'] %}
+                                <span style="color:#2e7d32; font-weight:600;">Active</span>
+                            {% elif item['status'] == 'sold' %}
+                                <span style="color:#888;">Sold</span>
+                            {% elif item['status'] == 'inactive' %}
+                                <span style="color:#c0392b;">Removed</span>
+                            {% else %}
+                                <span style="color:#888;">Ended</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="listing-actions">
+                                {% if item['is_active'] %}
+                                <a href="/bidder/listings/{{ item['listing_id'] }}/bid" class="btn-primary" style="font-size:13px; padding:5px 12px;">Bid</a>
+                                {% endif %}
+                                <form method="POST" action="/bidder/watchlist" style="margin:0;">
+                                    <input type="hidden" name="action" value="remove">
+                                    <input type="hidden" name="listing_id" value="{{ item['listing_id'] }}">
+                                    <button type="submit" class="btn-danger" style="font-size:13px; padding:5px 12px;">Remove</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="empty-state">Your watchlist is empty. Browse listings and save ones you're interested in.</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

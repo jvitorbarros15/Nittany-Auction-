@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Request New Category — NittanyAuction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="first-navbar">
+        <img src="{{ url_for('static', filename='logo.svg') }}" alt="NittanyAuction" height="36">
+        <div class="nav-links">
+            <span class="nav-user">{{ email }}</span>
+            <a href="/seller">Dashboard</a>
+            <a href="/logout">Logout</a>
+        </div>
+    </nav>
+
+    <div class="seller-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <h2>Request a New Category</h2>
+        <p class="seller-subtitle">Submit a request to HelpDesk to add a new product category.</p>
+
+        <div class="form-card" style="margin-bottom:28px;">
+            <form method="POST">
+                <div class="form-group">
+                    <label for="category_name">Category Name</label>
+                    <input type="text" id="category_name" name="category_name" required placeholder="e.g. Vintage Electronics">
+                </div>
+                <div class="form-group">
+                    <label for="details">Details (optional)</label>
+                    <textarea id="details" name="details" rows="3" placeholder="Why should this category exist?"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Submit Request</button>
+                    <a href="/seller" class="btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+
+        <div class="listings-section">
+            <h3>My Requests</h3>
+            {% if my_requests %}
+            <table class="listings-table">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Details</th>
+                        <th>Status</th>
+                        <th>Assigned To</th>
+                        <th>Submitted</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in my_requests %}
+                    <tr>
+                        <td>{{ r['category_name'] }}</td>
+                        <td>{{ r['details'] or '—' }}</td>
+                        <td>{{ r['status'].title() }}</td>
+                        <td>{{ r['assigned_to'] }}</td>
+                        <td>{{ r['submitted_at'][:16].replace('T', ' ') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="empty-state">You have not submitted any category requests.</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>HelpDesk Requests — NittanyAuction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="first-navbar">
+        <img src="{{ url_for('static', filename='logo.svg') }}" alt="NittanyAuction" height="36">
+        <div class="nav-links">
+            <span class="nav-user">{{ email }}</span>
+            <a href="/helpdesk">Dashboard</a>
+            <a href="/logout">Logout</a>
+        </div>
+    </nav>
+
+    <div class="seller-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <div class="listings-header">
+            <h2>HelpDesk Requests</h2>
+        </div>
+
+        <div class="listings-section">
+            <h3>Unassigned ({{ unassigned|length }})</h3>
+            {% if unassigned %}
+            <table class="listings-table">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Requested By</th>
+                        <th>Category</th>
+                        <th>Details</th>
+                        <th>Submitted</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in unassigned %}
+                    <tr>
+                        <td>{{ r['request_type'].replace('_', ' ').title() }}</td>
+                        <td>{{ r['requester_email'] }}</td>
+                        <td>{{ r['category_name'] or '—' }}</td>
+                        <td>{{ r['details'] or '—' }}</td>
+                        <td>{{ r['submitted_at'][:16].replace('T', ' ') }}</td>
+                        <td>
+                            <form method="POST" action="/helpdesk/requests/{{ r['request_id'] }}/claim" style="margin:0;">
+                                <button type="submit" class="btn-primary" style="font-size:13px; padding:6px 14px;">Claim</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="empty-state">No unassigned requests.</p>
+            {% endif %}
+        </div>
+
+        <div class="listings-section">
+            <h3>Assigned to Me ({{ mine|length }})</h3>
+            {% if mine %}
+            <table class="listings-table">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Requested By</th>
+                        <th>Category</th>
+                        <th>Details</th>
+                        <th>Submitted</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in mine %}
+                    <tr>
+                        <td>{{ r['request_type'].replace('_', ' ').title() }}</td>
+                        <td>{{ r['requester_email'] }}</td>
+                        <td>{{ r['category_name'] or '—' }}</td>
+                        <td>{{ r['details'] or '—' }}</td>
+                        <td>{{ r['submitted_at'][:16].replace('T', ' ') }}</td>
+                        <td>
+                            <form method="POST" action="/helpdesk/requests/{{ r['request_id'] }}/complete" style="margin:0;">
+                                <button type="submit" class="btn-primary" style="font-size:13px; padding:6px 14px;">Complete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="empty-state">You have no assigned requests.</p>
+            {% endif %}
+        </div>
+
+        <div class="listings-section">
+            <h3>Recently Completed ({{ completed|length }})</h3>
+            {% if completed %}
+            <table class="listings-table">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Requested By</th>
+                        <th>Category</th>
+                        <th>Completed</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in completed %}
+                    <tr>
+                        <td>{{ r['request_type'].replace('_', ' ').title() }}</td>
+                        <td>{{ r['requester_email'] }}</td>
+                        <td>{{ r['category_name'] or '—' }}</td>
+                        <td>{{ (r['completed_at'] or '')[:16].replace('T', ' ') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="empty-state">No completed requests yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

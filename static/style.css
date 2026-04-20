@@ -630,6 +630,11 @@ body {
     box-shadow: 0 6px 20px rgba(0,0,0,0.12);
 }
 
+.listing-card-promoted {
+    border: 2px solid #ffe082;
+    background: #fffbea;
+}
+
 .listing-card-title {
     font-size: 16px;
     font-weight: 700;

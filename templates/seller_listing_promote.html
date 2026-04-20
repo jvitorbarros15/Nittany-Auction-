@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Promote Listing — NittanyAuction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="first-navbar">
+        <img src="{{ url_for('static', filename='logo.svg') }}" alt="NittanyAuction" height="36">
+        <div class="nav-links">
+            <span class="nav-user">{{ email }}</span>
+            <a href="/seller/listings">My Listings</a>
+            <a href="/logout">Logout</a>
+        </div>
+    </nav>
+
+    <div class="seller-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <div class="form-card">
+            <h2>Promote Listing</h2>
+            <p style="font-size:14px; color:#666; margin-bottom:20px;">
+                Promoted listings appear at the top of the <strong>All</strong> browse page and at the top of their
+                category page, giving them more visibility to bidders.
+            </p>
+
+            <div class="bid-box" style="background:#fff8e1; border:1px solid #ffe082;">
+                <div class="bid-box-label">{{ listing['title'] }}</div>
+                <div class="bid-box-sub" style="color:#666; margin-top:4px;">
+                    Reserve price: ${{ "%.2f"|format(listing['reserve_price']) }}
+                </div>
+                <div class="bid-box-amount" style="margin-top:12px;">
+                    Promotion fee: ${{ "%.2f"|format(fee) }}
+                </div>
+                <div class="bid-box-sub" style="color:#666;">(5% of reserve price)</div>
+            </div>
+
+            <form method="POST" style="margin-top:20px;">
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Pay ${{ "%.2f"|format(fee) }} & Promote</button>
+                    <a href="/seller/listings" class="btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

@@ -66,6 +66,36 @@ def seller():
         return guard
     return render_template("seller_welcome.html", email=session["email"])
 
+@app.route("/seller/listings")
+def seller_listings():
+    guard = role_required("seller")
+    if guard:
+        return guard
+
+    with sqlite3.connect("nittanyauction.db") as conn:
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT l.*,
+                   c.category_name AS category,
+                   (SELECT COUNT(*) FROM bids WHERE listing_id = l.listing_id) AS bid_count
+            FROM listings l
+            LEFT JOIN categories c ON l.category_id = c.category_id
+            WHERE l.seller_email = ?
+        """, (session["email"],))
+        rows = cursor.fetchall()
+
+    active   = [r for r in rows if r["status"] == "active"]
+    inactive = [r for r in rows if r["status"] == "inactive"]
+    sold     = [r for r in rows if r["status"] == "sold"]
+
+    return render_template("seller_listings.html",
+                           active=active,
+                           inactive=inactive,
+                           sold=sold,
+                           email=session["email"])
+
 @app.route("/seller/listings/new", methods=["GET", "POST"])
 def seller_listing_new():
     guard = role_required("seller")
@@ -116,11 +146,99 @@ def seller_listing_remove(listing_id):
     # get the listing so we can show the title on the page
     cursor.execute("SELECT * FROM listings WHERE listing_id = ?", (listing_id,))
     listing = cursor.fetchone()
+    
+
+    if not listing or listing["seller_email"] != session["email"]:
+        connection.close()
+        flash("Listing not found or you do not have permission to remove it.", "error")
+        return redirect("/seller/listings")
+
+    cursor.execute("SELECT COUNT(*) FROM bids WHERE listing_id = ?", (listing_id,))
+    bid_count = cursor.fetchone()[0]
+
+    if request.method == "POST":
+        removal_reason = request.form["removal_reason"]
+
+        # mark as inactive instead of deleting it so we keep the history
+        cursor.execute("""
+            UPDATE listings 
+            SET status = 'inactive', removal_reason = ?
+            WHERE listing_id = ?
+        """, (removal_reason, listing_id))
+        connection.commit()
+        connection.close()
+
+        flash("Listing removed successfully.", "success")
+        return redirect("/seller/listings")
+
     connection.close()
 
     return render_template("seller_listing_remove.html",
                            listing=listing,
-                           bid_count=0,
+                           bid_count=bid_count,
+                           email=session["email"])
+
+@app.route("/seller/listings/<int:listing_id>/edit", methods=["GET", "POST"])
+def seller_listing_edit(listing_id):
+    guard = role_required("seller")
+    if guard:
+        return guard
+
+    connection = sqlite3.connect("nittanyauction.db")
+    connection.row_factory = sqlite3.Row
+    cursor = connection.cursor()
+
+    cursor.execute("SELECT * FROM listings WHERE listing_id = ?", (listing_id,))
+    listing = cursor.fetchone()
+
+    # make sure the listing exists and belongs to this seller
+    if not listing or listing["seller_email"] != session["email"]:
+        connection.close()
+        flash("Listing not found or you do not have permission to edit it.", "error")
+        return redirect("/seller/listings")
+
+    cursor.execute("SELECT COUNT(*) FROM bids WHERE listing_id = ?", (listing_id,))
+    bid_count = cursor.fetchone()[0]
+
+    if bid_count > 0:
+        connection.close()
+        return render_template("seller_listing_edit.html",
+                               editable=False,
+                               block_reason="This listing already has bids and cannot be edited.",
+                               listing=None,
+                               categories=[],
+                               email=session["email"])
+
+    if request.method == "POST":
+        title             = request.form["title"]
+        description       = request.form["description"]
+        condition         = request.form["condition"]
+        category_id       = int(request.form["category_id"])
+        reserve_price     = float(request.form["reserve_price"])
+        auction_stop_time = request.form["auction_stop_time"]
+
+        cursor.execute("""
+            UPDATE listings
+            SET title = ?, description = ?, condition = ?, category_id = ?,
+                reserve_price = ?, auction_stop_time = ?
+            WHERE listing_id = ?
+        """, (title, description, condition, category_id, reserve_price, auction_stop_time, listing_id))
+        connection.commit()
+        connection.close()
+
+        flash("Listing updated successfully.", "success")
+        return redirect("/seller/listings")
+
+    # categories for the dropdown
+    cursor.execute("SELECT category_id, category_name FROM categories")
+    categories = [{"category_id": row[0], "category_name": row[1]} for row in cursor.fetchall()]
+    connection.close()
+
+    return render_template("seller_listing_edit.html",
+                           editable=True,
+                           block_reason=None,
+                           listing=listing,
+                           categories=categories,
                            email=session["email"])
 
 @app.route("/buyer")

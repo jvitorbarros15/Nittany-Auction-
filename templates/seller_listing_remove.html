@@ -14,7 +14,7 @@
         </div>
     </nav>
 
-    <div class="seller-content"></div>
+    <div class="seller-content">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% for category, message in messages %}
                 <div class="flash-{{ category }}">{{ message }}</div>

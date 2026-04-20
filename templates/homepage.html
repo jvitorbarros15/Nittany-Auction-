@@ -365,6 +365,39 @@
     </div>
 </section>
 
+<!-- ── How It Works ── -->
+<section class="hp-how">
+    <div class="hp-how-inner">
+        <h2 class="hp-how-title">How It Works</h2>
+        <p class="hp-how-sub">Three simple steps to start buying or selling</p>
+        <div class="hp-steps">
+            <div class="hp-step">
+                <div class="hp-step-icon">📝</div>
+                <div class="hp-step-num">01</div>
+                <h3 class="hp-step-title">Create an Account</h3>
+                <p class="hp-step-desc">Sign up as a buyer or apply to become a seller. It only takes a minute.</p>
+            </div>
+            <div class="hp-step-arrow">→</div>
+            <div class="hp-step">
+                <div class="hp-step-icon">🔍</div>
+                <div class="hp-step-num">02</div>
+                <h3 class="hp-step-title">Browse & Bid</h3>
+                <p class="hp-step-desc">Explore live auctions across all categories. Place bids before the timer runs out.</p>
+            </div>
+            <div class="hp-step-arrow">→</div>
+            <div class="hp-step">
+                <div class="hp-step-icon">🏆</div>
+                <div class="hp-step-num">03</div>
+                <h3 class="hp-step-title">Win & Pay</h3>
+                <p class="hp-step-desc">Highest bidder wins. Pay securely with your saved card and rate your seller.</p>
+            </div>
+        </div>
+        <div class="hp-how-cta">
+            <a href="/register" class="btn-primary hp-btn-lg">Get Started Free</a>
+        </div>
+    </div>
+</section>
+
 <!-- ── Stats Bar ── -->
 <section class="hp-stats">
     <div class="hp-stat">
@@ -388,6 +421,30 @@
     </div>
 </section>
 
+
+<!-- ── Footer ── -->
+<footer class="hp-footer">
+    <div class="hp-footer-inner">
+        <div class="hp-footer-brand">
+            <img src="{{ url_for('static', filename='logo.svg') }}" alt="NittanyAuction" height="28">
+            <p>A trusted marketplace for buyers and sellers.</p>
+        </div>
+        <div class="hp-footer-links">
+            <span class="hp-footer-col-title">Platform</span>
+            <a href="/login">Browse Auctions</a>
+            <a href="/register">Create Account</a>
+            <a href="/login">Sell an Item</a>
+        </div>
+        <div class="hp-footer-links">
+            <span class="hp-footer-col-title">Support</span>
+            <a href="/login">Help Center</a>
+            <a href="/login">Contact Us</a>
+        </div>
+    </div>
+    <div class="hp-footer-bottom">
+        <span>© 2026 NittanyAuction. All rights reserved.</span>
+    </div>
+</footer>
 
 <script>
 function slideCarousel(id, dir) {

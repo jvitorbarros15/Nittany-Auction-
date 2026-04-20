@@ -1,22 +1,55 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>NittanyAuction</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NittanyAuction — Buy & Sell with Confidence</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <nav class="first-navbar">
-        <img src="{{ url_for('static', filename='logo.svg') }}" alt="NittanyAuction" height="36">
-        <div class="nav-links">
-            <a href="/">Home</a>
-            <a href="/login">Login</a>
-        </div>
-    </nav>
 
-    <div class="hero">
-        <h2>Buy & Sell with Confidence</h2>
-        <p>Join NittanyAuction a trusted marketplace for buyers, sellers, and support.</p>
-        <a href="/login" class="hero-btn">Get Started</a>
+<!-- ── Navbar ── -->
+<nav class="first-navbar">
+    <img src="{{ url_for('static', filename='logo.svg') }}" alt="NittanyAuction" height="36">
+    <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/login">Login</a>
+        <a href="/register" class="nav-cta">Register</a>
     </div>
+</nav>
+
+<!-- ── Hero ── -->
+<section class="hp-hero">
+    <div class="hp-hero-inner">
+        <span class="hp-hero-badge">Live Auctions · Real Deals</span>
+        <h1 class="hp-hero-title">Buy &amp; Sell with<br><span class="hp-hero-accent">Confidence</span></h1>
+        <p class="hp-hero-sub">Join NittanyAuction — a trusted marketplace where buyers bid on real listings from verified sellers.</p>
+        <div class="hp-hero-actions">
+            <a href="/login" class="btn-primary hp-btn-lg">Browse Auctions</a>
+            <a href="/register" class="hp-btn-outline">Create Account</a>
+        </div>
+    </div>
+    <div class="hp-hero-visual">
+        <div class="hp-hero-card hp-hc1">
+            <span class="hp-hc-label">Current Bid</span>
+            <span class="hp-hc-price">$142.00</span>
+            <span class="hp-hc-title">Vintage Camera</span>
+            <span class="hp-hc-timer">⏱ 2h 14m left</span>
+        </div>
+        <div class="hp-hero-card hp-hc2">
+            <span class="hp-hc-label">Current Bid</span>
+            <span class="hp-hc-price">$89.50</span>
+            <span class="hp-hc-title">Mechanical Keyboard</span>
+            <span class="hp-hc-timer">⏱ 45m left</span>
+        </div>
+        <div class="hp-hero-card hp-hc3">
+            <span class="hp-hc-label">Starting At</span>
+            <span class="hp-hc-price">$25.00</span>
+            <span class="hp-hc-title">Art Print Set</span>
+            <span class="hp-hc-timer">⏱ 1d 3h left</span>
+        </div>
+    </div>
+</section>
+
 </body>
 </html>

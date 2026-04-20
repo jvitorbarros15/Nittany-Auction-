@@ -952,3 +952,173 @@ body {
 .star-group input[type="radio"]:checked ~ label {
     color: #e08311;
 }
+
+/* ══════════════════════════════════════════
+   HOMEPAGE — shared token
+   ══════════════════════════════════════════ */
+
+/* Register nav CTA */
+.nav-cta {
+    background-color: #e08311 !important;
+    border-color: #e08311 !important;
+}
+
+/* ── Hero ── */
+.hp-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 48px;
+    min-height: calc(100vh - 68px);
+    padding: 60px 80px;
+    background: linear-gradient(135deg, #1e1e2f 0%, #2a2a45 60%, #1e1e2f 100%);
+    overflow: hidden;
+    position: relative;
+}
+
+.hp-hero::before {
+    content: '';
+    position: absolute;
+    top: -120px;
+    right: -120px;
+    width: 520px;
+    height: 520px;
+    background: radial-gradient(circle, rgba(224,131,17,0.12) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.hp-hero-inner {
+    flex: 1;
+    max-width: 560px;
+    z-index: 1;
+}
+
+.hp-hero-badge {
+    display: inline-block;
+    background: rgba(224,131,17,0.18);
+    color: #e08311;
+    border: 1px solid rgba(224,131,17,0.35);
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    margin-bottom: 22px;
+}
+
+.hp-hero-title {
+    font-size: 54px;
+    font-weight: 700;
+    line-height: 1.1;
+    color: #fff;
+    margin-bottom: 18px;
+}
+
+.hp-hero-accent {
+    color: #e08311;
+}
+
+.hp-hero-sub {
+    font-size: 16px;
+    color: rgba(255,255,255,0.62);
+    line-height: 1.7;
+    margin-bottom: 36px;
+    max-width: 440px;
+}
+
+.hp-hero-actions {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.hp-btn-lg {
+    padding: 14px 36px !important;
+    font-size: 15px !important;
+}
+
+.hp-btn-outline {
+    display: inline-block;
+    text-decoration: none;
+    color: rgba(255,255,255,0.85);
+    border: 1.5px solid rgba(255,255,255,0.3);
+    padding: 13px 32px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 15px;
+    transition: border-color 0.2s, color 0.2s, background-color 0.2s;
+}
+
+.hp-btn-outline:hover {
+    border-color: #e08311;
+    color: #e08311;
+    background-color: rgba(224,131,17,0.08);
+}
+
+/* Floating auction preview cards in hero */
+.hp-hero-visual {
+    flex: 0 0 auto;
+    position: relative;
+    width: 300px;
+    height: 380px;
+    z-index: 1;
+}
+
+.hp-hero-card {
+    position: absolute;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    backdrop-filter: blur(12px);
+    border-radius: 14px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 200px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+}
+
+.hp-hc1 { top: 0;   left: 60px; }
+.hp-hc2 { top: 130px; left: 0;  }
+.hp-hc3 { top: 250px; left: 80px; }
+
+.hp-hc-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.45);
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+}
+
+.hp-hc-price {
+    font-size: 22px;
+    font-weight: 700;
+    color: #e08311;
+}
+
+.hp-hc-title {
+    font-size: 13px;
+    color: rgba(255,255,255,0.85);
+    font-weight: 500;
+}
+
+.hp-hc-timer {
+    font-size: 11px;
+    color: rgba(255,255,255,0.45);
+    margin-top: 4px;
+}
+
+@media (max-width: 860px) {
+    .hp-hero {
+        flex-direction: column;
+        padding: 48px 24px;
+        text-align: center;
+        min-height: auto;
+    }
+    .hp-hero-title { font-size: 38px; }
+    .hp-hero-sub { margin: 0 auto 32px; }
+    .hp-hero-actions { justify-content: center; }
+    .hp-hero-visual { display: none; }
+}

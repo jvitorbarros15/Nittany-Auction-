@@ -60,7 +60,9 @@ def init_db():
             listing_id    INTEGER NOT NULL,
             bidder_email  TEXT NOT NULL,
             question_text TEXT NOT NULL,
-            asked_at      DATETIME DEFAULT CURRENT_TIMESTAMP
+            asked_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
+            answer_text   TEXT,
+            answered_at   DATETIME
         );
         CREATE TABLE IF NOT EXISTS transactions (
             transaction_id   INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -246,29 +248,64 @@ def seller_listings():
     if guard:
         return guard
 
+    category_id     = request.args.get("category_id", type=int)
+    parent_category = request.args.get("parent_category", "").strip()
+    sort            = request.args.get("sort", "").strip()
+
+    sort_options = {
+        "time_asc":   "l.auction_stop_time ASC",
+        "time_desc":  "l.auction_stop_time DESC",
+        "price_asc":  "l.reserve_price ASC",
+        "price_desc": "l.reserve_price DESC",
+        "bids_desc":  "bid_count DESC",
+        "bids_asc":   "bid_count ASC",
+    }
+    order_sql = "ORDER BY l.promoted DESC, " + sort_options.get(sort, "l.auction_stop_time ASC")
+
     with sqlite3.connect("nittanyauction.db") as conn:
         conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
 
-        cursor.execute("""
+        all_cats = conn.execute(
+            "SELECT * FROM categories ORDER BY parent_category, category_name"
+        ).fetchall()
+        grouped_categories = {}
+        for cat in all_cats:
+            p = cat["parent_category"] or "Other"
+            grouped_categories.setdefault(p, []).append(dict(cat))
+
+        base = """
             SELECT l.*,
                    c.category_name AS category,
+                   c.parent_category,
                    (SELECT COUNT(*) FROM bids WHERE listing_id = l.listing_id) AS bid_count
             FROM listings l
             LEFT JOIN categories c ON l.category_id = c.category_id
             WHERE l.seller_email = ?
-        """, (session["email"],))
-        rows = cursor.fetchall()
+        """
+        params = [session["email"]]
 
-    active   = [r for r in rows if r["status"] == "active"]
-    inactive = [r for r in rows if r["status"] == "inactive"]
-    sold     = [r for r in rows if r["status"] == "sold"]
+        if category_id:
+            base += " AND l.category_id = ?"
+            params.append(category_id)
+        elif parent_category:
+            base += " AND c.parent_category = ?"
+            params.append(parent_category)
+
+        all_rows = conn.execute(base + " " + order_sql, params).fetchall()
+
+    active   = [r for r in all_rows if r["status"] == "active"]
+    inactive = [r for r in all_rows if r["status"] == "inactive"]
+    sold     = [r for r in all_rows if r["status"] == "sold"]
 
     return render_template("seller_listings.html",
                            active=active,
                            inactive=inactive,
                            sold=sold,
-                           email=session["email"])
+                           email=session["email"],
+                           sort=sort,
+                           grouped_categories=grouped_categories,
+                           selected_category=category_id,
+                           selected_parent=parent_category)
 
 @app.route("/seller/listings/new", methods=["GET", "POST"])
 def seller_listing_new():
@@ -462,6 +499,55 @@ def bidder():
                            pending_ratings=pending_ratings)
 
 
+@app.route("/bidder/bids")
+def bidder_bids():
+    guard = role_required("buyer")
+    if guard:
+        return guard
+
+    email = session["email"]
+    now = datetime.now().strftime("%Y-%m-%dT%H:%M")
+
+    with sqlite3.connect("nittanyauction.db") as conn:
+        conn.row_factory = sqlite3.Row
+
+        bids = conn.execute("""
+            SELECT l.listing_id, l.title, l.auction_stop_time, l.status,
+                   l.reserve_price, c.category_name,
+                   b.bid_amount AS my_bid,
+                   (SELECT MAX(bid_amount) FROM bids WHERE listing_id = l.listing_id) AS top_bid,
+                   (SELECT COUNT(*) FROM bids WHERE listing_id = l.listing_id) AS bid_count,
+                   (SELECT bidder_email FROM bids
+                    WHERE listing_id = l.listing_id
+                    ORDER BY bid_amount DESC LIMIT 1) AS top_bidder
+            FROM bids b
+            JOIN listings l ON b.listing_id = l.listing_id
+            LEFT JOIN categories c ON l.category_id = c.category_id
+            WHERE b.bidder_email = ?
+            GROUP BY l.listing_id
+            ORDER BY l.auction_stop_time ASC
+        """, (email,)).fetchall()
+
+        my_questions = conn.execute("""
+            SELECT q.question_id, q.question_text, q.asked_at, q.answer_text, q.answered_at,
+                   l.listing_id, l.title AS listing_title
+            FROM questions q
+            JOIN listings l ON q.listing_id = l.listing_id
+            WHERE q.bidder_email = ?
+            ORDER BY q.asked_at DESC
+        """, (email,)).fetchall()
+
+    active_bids = [r for r in bids if r["status"] == "active" and r["auction_stop_time"] > now]
+    ended_bids  = [r for r in bids if r["status"] != "active" or r["auction_stop_time"] <= now]
+
+    return render_template("bidder_bids.html",
+                           email=email,
+                           active_bids=active_bids,
+                           ended_bids=ended_bids,
+                           my_questions=my_questions,
+                           now=now)
+
+
 @app.route("/bidder/profile", methods=["GET", "POST"])
 def bidder_profile():
     guard = role_required("buyer")
@@ -554,7 +640,23 @@ def bidder_listings():
 
     category_id     = request.args.get("category_id", type=int)
     parent_category = request.args.get("parent_category", "").strip()
+    sort            = request.args.get("sort", "").strip()
+    query           = request.args.get("q", "").strip()
     now = datetime.now().strftime("%Y-%m-%dT%H:%M")
+
+    sort_options = {
+        "time_asc":   "l.auction_stop_time ASC",
+        "time_desc":  "l.auction_stop_time DESC",
+        "price_asc":  "COALESCE(current_bid, l.reserve_price) ASC",
+        "price_desc": "COALESCE(current_bid, l.reserve_price) DESC",
+        "bids_asc":   "bid_count ASC",
+        "bids_desc":  "bid_count DESC",
+    }
+    order_clause = sort_options.get(sort)
+    if order_clause:
+        order_sql = f"ORDER BY l.promoted DESC, {order_clause}"
+    else:
+        order_sql = "ORDER BY l.promoted DESC, l.auction_stop_time ASC"
 
     with sqlite3.connect("nittanyauction.db") as conn:
         conn.row_factory = sqlite3.Row
@@ -563,7 +665,6 @@ def bidder_listings():
             "SELECT * FROM categories ORDER BY parent_category, category_name"
         ).fetchall()
 
-        # Build {parent: [cat, ...]} for the template dropdown
         grouped_categories = {}
         for cat in all_cats:
             parent = cat["parent_category"] or "Other"
@@ -578,28 +679,28 @@ def bidder_listings():
             WHERE l.status = 'active' AND l.auction_stop_time > ?
         """
 
+        params = [now]
+        filters = ""
+        if query:
+            filters += " AND (l.title LIKE ? OR l.description LIKE ? OR c.category_name LIKE ?)"
+            params.extend([f"%{query}%", f"%{query}%", f"%{query}%"])
         if category_id:
-            listings = conn.execute(
-                base_select + " AND l.category_id = ? ORDER BY l.promoted DESC, l.auction_stop_time ASC",
-                (now, category_id)
-            ).fetchall()
+            filters += " AND l.category_id = ?"
+            params.append(category_id)
         elif parent_category:
-            listings = conn.execute(
-                base_select + " AND c.parent_category = ? ORDER BY l.promoted DESC, l.auction_stop_time ASC",
-                (now, parent_category)
-            ).fetchall()
-        else:
-            listings = conn.execute(
-                base_select + " ORDER BY l.promoted DESC, l.auction_stop_time ASC",
-                (now,)
-            ).fetchall()
+            filters += " AND c.parent_category = ?"
+            params.append(parent_category)
+
+        listings = conn.execute(base_select + filters + f" {order_sql}", params).fetchall()
 
     return render_template("bidder_listings.html",
                            email=session["email"],
                            listings=listings,
                            grouped_categories=grouped_categories,
                            selected_category=category_id,
-                           selected_parent=parent_category)
+                           selected_parent=parent_category,
+                           sort=sort,
+                           query=query)
 
 
 @app.route("/bidder/listings/<int:listing_id>")
@@ -657,6 +758,11 @@ def bidder_listing_view(listing_id):
             (listing_id, email)
         ).fetchall()
 
+        all_qa = conn.execute(
+            "SELECT * FROM questions WHERE listing_id = ? AND answer_text IS NOT NULL ORDER BY asked_at ASC",
+            (listing_id,)
+        ).fetchall()
+
         in_watchlist = conn.execute(
             "SELECT 1 FROM watchlist WHERE bidder_email = ? AND listing_id = ?",
             (email, listing_id)
@@ -672,6 +778,7 @@ def bidder_listing_view(listing_id):
                            transaction=transaction,
                            rated=rated,
                            my_questions=my_questions,
+                           all_qa=all_qa,
                            in_watchlist=in_watchlist)
 
 
@@ -698,11 +805,20 @@ def bidder_bid(listing_id):
             "SELECT MAX(bid_amount) FROM bids WHERE listing_id = ?", (listing_id,)
         ).fetchone()[0]
 
+        last_bidder = conn.execute(
+            "SELECT bidder_email FROM bids WHERE listing_id = ? ORDER BY bid_id DESC LIMIT 1", (listing_id,)
+        ).fetchone()
+        is_last_bidder = last_bidder and last_bidder["bidder_email"] == email
+
         if request.method == "POST":
             try:
                 bid_amount = float(request.form["bid_amount"])
             except (ValueError, KeyError):
                 flash("Invalid bid amount.", "error")
+                return redirect(f"/bidder/listings/{listing_id}/bid")
+
+            if is_last_bidder:
+                flash("You already hold the highest bid. Another bidder must bid before you can bid again.", "error")
                 return redirect(f"/bidder/listings/{listing_id}/bid")
 
             if bid_amount < listing["reserve_price"]:
@@ -726,7 +842,8 @@ def bidder_bid(listing_id):
                            email=email,
                            listing=listing,
                            top_bid=top_bid,
-                           min_bid=min_bid)
+                           min_bid=min_bid,
+                           is_last_bidder=is_last_bidder)
 
 
 @app.route("/bidder/listings/<int:listing_id>/question", methods=["GET", "POST"])
@@ -1085,6 +1202,46 @@ def seller_listing_promote(listing_id):
 
     return render_template("seller_listing_promote.html",
                            email=email, listing=listing, fee=fee)
+
+
+@app.route("/seller/listings/<int:listing_id>/questions", methods=["GET", "POST"])
+def seller_listing_questions(listing_id):
+    guard = role_required("seller")
+    if guard:
+        return guard
+
+    email = session["email"]
+
+    with sqlite3.connect("nittanyauction.db") as conn:
+        conn.row_factory = sqlite3.Row
+
+        listing = conn.execute(
+            "SELECT * FROM listings WHERE listing_id = ? AND seller_email = ?",
+            (listing_id, email)
+        ).fetchone()
+
+        if not listing:
+            flash("Listing not found.", "error")
+            return redirect("/seller/listings")
+
+        if request.method == "POST":
+            question_id = request.form.get("question_id", type=int)
+            answer_text = request.form.get("answer_text", "").strip()
+            if question_id and answer_text:
+                conn.execute(
+                    "UPDATE questions SET answer_text = ?, answered_at = CURRENT_TIMESTAMP WHERE question_id = ? AND listing_id = ?",
+                    (answer_text, question_id, listing_id)
+                )
+                flash("Answer posted.", "success")
+            return redirect(f"/seller/listings/{listing_id}/questions")
+
+        questions = conn.execute(
+            "SELECT * FROM questions WHERE listing_id = ? ORDER BY asked_at ASC",
+            (listing_id,)
+        ).fetchall()
+
+    return render_template("seller_listing_questions.html",
+                           email=email, listing=listing, questions=questions)
 
 
 @app.route("/bidder/watchlist", methods=["GET", "POST"])

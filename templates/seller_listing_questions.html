@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Q&A — {{ listing['title'] }} — NittanyAuction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .qa-card {
+            background: #fff;
+            border: 1px solid #ebebf2;
+            border-radius: 14px;
+            padding: 20px 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .qa-question {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1e1e2f;
+            margin-bottom: 6px;
+        }
+        .qa-meta {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-bottom: 14px;
+        }
+        .qa-answer {
+            background: #f0f4ff;
+            border-left: 3px solid #4f46e5;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 14px;
+            color: #374151;
+        }
+        .qa-answer-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #4f46e5;
+            margin-bottom: 4px;
+        }
+        .qa-answer-form textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 10px 14px;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 14px;
+            resize: vertical;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+        .qa-answer-form textarea:focus { outline: none; border-color: #4f46e5; }
+        .empty-card {
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid #ebebf2;
+            padding: 40px;
+            text-align: center;
+            color: #9ca3af;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="first-navbar">
+        <img src="{{ url_for('static', filename='logo.svg') }}" alt="NittanyAuction" height="36">
+        <div class="nav-links">
+            <span class="nav-user">{{ email }}</span>
+            <a href="/seller/listings">← My Listings</a>
+            <a href="/logout">Logout</a>
+        </div>
+    </nav>
+
+    <div class="page-banner">
+        <div class="page-banner-inner">
+            <div>
+                <h2>Q&A</h2>
+                <p>{{ listing['title'] }} · {{ questions|length }} question{{ 's' if questions|length != 1 }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-wrap">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        {% if questions %}
+            {% for q in questions %}
+            <div class="qa-card">
+                <div class="qa-question">{{ q['question_text'] }}</div>
+                <div class="qa-meta">From {{ q['bidder_email'] }} · {{ q['asked_at'][:16].replace('T', ' ') }}</div>
+
+                {% if q['answer_text'] %}
+                <div class="qa-answer">
+                    <div class="qa-answer-label">Your answer</div>
+                    {{ q['answer_text'] }}
+                </div>
+                {% else %}
+                <form method="POST" action="/seller/listings/{{ listing['listing_id'] }}/questions" class="qa-answer-form">
+                    <input type="hidden" name="question_id" value="{{ q['question_id'] }}">
+                    <textarea name="answer_text" placeholder="Write your answer…" required></textarea>
+                    <div style="margin-top:10px;">
+                        <button type="submit" class="btn-primary" style="font-size:13px;">Post Answer</button>
+                    </div>
+                </form>
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+        <div class="empty-card">No questions yet for this listing.</div>
+        {% endif %}
+    </div>
+</body>
+</html>

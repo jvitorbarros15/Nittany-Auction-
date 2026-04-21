@@ -10,6 +10,7 @@
         <div class="nav-links">
             <span class="nav-user">{{ email }}</span>
             <a href="/bidder/listings">Browse</a>
+            <a href="/bidder/bids">My Bids</a>
             <a href="/bidder/watchlist">Watchlist</a>
             <a href="/bidder/profile">Profile</a>
             <a href="/bidder/cards">Cards</a>
@@ -17,39 +18,50 @@
         </div>
     </nav>
 
-    <div class="seller-content">
+    <div class="page-banner">
+        <div class="page-banner-inner">
+            <div>
+                <h2>Bidder Dashboard</h2>
+                <p>Welcome back, {{ email }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-wrap">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% for category, message in messages %}
                 <div class="flash-{{ category }}">{{ message }}</div>
             {% endfor %}
         {% endwith %}
 
-        <h2>Bidder Dashboard</h2>
-        <p class="seller-subtitle">Welcome back, {{ email }}</p>
-
         <div class="dashboard-cards">
             <a href="/bidder/listings" class="dashboard-card">
-                <div class="card-icon">🔍</div>
+                <div class="card-icon-wrap" style="background:#f0f4ff;">🔍</div>
                 <div class="card-label">Browse Listings</div>
                 <div class="card-desc">Find items to bid on by category</div>
             </a>
             <a href="/bidder/profile" class="dashboard-card">
-                <div class="card-icon">👤</div>
+                <div class="card-icon-wrap" style="background:#f0fff4;">👤</div>
                 <div class="card-label">My Profile</div>
                 <div class="card-desc">View and update your personal info</div>
             </a>
             <a href="/bidder/cards" class="dashboard-card">
-                <div class="card-icon">💳</div>
+                <div class="card-icon-wrap" style="background:#fff8f0;">💳</div>
                 <div class="card-label">My Cards</div>
                 <div class="card-desc">Manage your payment methods</div>
             </a>
+            <a href="/bidder/bids" class="dashboard-card">
+                <div class="card-icon-wrap" style="background:#f0fff4;">🔨</div>
+                <div class="card-label">My Bids</div>
+                <div class="card-desc">Track your active and past bids</div>
+            </a>
             <a href="/bidder/watchlist" class="dashboard-card">
-                <div class="card-icon">⭐</div>
+                <div class="card-icon-wrap" style="background:#fffbf0;">⭐</div>
                 <div class="card-label">My Watchlist</div>
                 <div class="card-desc">Items you've saved for later</div>
             </a>
             <a href="/bidder/apply-seller" class="dashboard-card">
-                <div class="card-icon">📋</div>
+                <div class="card-icon-wrap" style="background:#f5f0ff;">📋</div>
                 <div class="card-label">Become a Seller</div>
                 <div class="card-desc">Submit an application to HelpDesk</div>
             </a>
@@ -57,7 +69,10 @@
 
         {% if won_auctions %}
         <div class="alert-section">
-            <h3>Auctions Won — Payment Required</h3>
+            <div class="alert-section-head">
+                <span style="font-size:16px;">🏆</span>
+                <h3>Auctions Won — Payment Required</h3>
+            </div>
             {% for item in won_auctions %}
             <div class="alert-item">
                 <span>{{ item['title'] }}</span>
@@ -72,13 +87,16 @@
 
         {% if pending_ratings %}
         <div class="alert-section">
-            <h3>Rate Your Sellers</h3>
+            <div class="alert-section-head">
+                <span style="font-size:16px;">⭐</span>
+                <h3>Rate Your Sellers</h3>
+            </div>
             {% for item in pending_ratings %}
             <div class="alert-item">
                 <span>{{ item['title'] }}</span>
                 <div class="alert-item-right">
                     <span style="color:#888;">${{ "%.2f"|format(item['amount']) }} paid</span>
-                    <a href="/bidder/listings/{{ item['listing_id'] }}/rate" class="btn-secondary" style="font-size:13px; padding:6px 16px;">Rate Seller</a>
+                    <a href="/bidder/listings/{{ item['listing_id'] }}/rate" class="btn-secondary" style="font-size:13px; padding:6px 12px;">Rate Seller</a>
                 </div>
             </div>
             {% endfor %}

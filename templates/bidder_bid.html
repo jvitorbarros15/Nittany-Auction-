@@ -35,6 +35,14 @@
                 <div class="bid-box-sub">Reserve price: ${{ "%.2f"|format(listing['reserve_price']) }}</div>
             </div>
 
+            {% if is_last_bidder %}
+            <div class="flash-error" style="margin-bottom:20px;">
+                You already hold the highest bid. Another bidder must bid before you can bid again.
+            </div>
+            <div class="form-actions">
+                <a href="/bidder/listings/{{ listing['listing_id'] }}" class="btn-secondary">← Back to Listing</a>
+            </div>
+            {% else %}
             <form method="POST" action="/bidder/listings/{{ listing['listing_id'] }}/bid">
                 <div class="form-group">
                     <label for="bid_amount">Your Bid ($)</label>
@@ -50,6 +58,7 @@
                     <a href="/bidder/listings/{{ listing['listing_id'] }}" class="btn-secondary">Cancel</a>
                 </div>
             </form>
+            {% endif %}
         </div>
     </div>
 </body>

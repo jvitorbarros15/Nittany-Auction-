@@ -14,31 +14,38 @@
         </div>
     </nav>
 
-    <div class="seller-content">
+    <div class="page-banner">
+        <div class="page-banner-inner">
+            <div>
+                <h2>Seller Dashboard</h2>
+                <p>Welcome back, {{ email }}</p>
+            </div>
+            <a href="/seller/listings/new" class="btn-primary">+ New Listing</a>
+        </div>
+    </div>
+
+    <div class="content-wrap">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% for category, message in messages %}
                 <div class="flash-{{ category }}">{{ message }}</div>
             {% endfor %}
         {% endwith %}
 
-        <h2>Seller Dashboard</h2>
-        <p class="seller-subtitle">Welcome back, {{ email }}</p>
-
         <div class="dashboard-cards">
             <a href="/seller/listings" class="dashboard-card">
-                <div class="card-icon">📦</div>
+                <div class="card-icon-wrap" style="background:#f0f4ff;">📦</div>
                 <div class="card-label">My Listings</div>
                 <div class="card-desc">View and manage all your auction listings</div>
             </a>
             <a href="/seller/listings/new" class="dashboard-card">
-                <div class="card-icon">+</div>
+                <div class="card-icon-wrap" style="background:#f0fff4;">✚</div>
                 <div class="card-label">Create Listing</div>
                 <div class="card-desc">Post a new item for auction</div>
             </a>
             <a href="/seller/category-request" class="dashboard-card">
-                <div class="card-icon">🏷️</div>
-                <div class="card-label">Request New Category</div>
-                <div class="card-desc">Ask HelpDesk to add a category</div>
+                <div class="card-icon-wrap" style="background:#fff8f0;">🏷️</div>
+                <div class="card-label">Request Category</div>
+                <div class="card-desc">Ask HelpDesk to add a new category</div>
             </a>
         </div>
     </div>

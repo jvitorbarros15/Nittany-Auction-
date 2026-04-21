@@ -3,6 +3,81 @@
 <head>
     <title>My Listings — NittanyAuction</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        /* Seller card actions footer — sits below the shared listing-card styles */
+        .listing-card-actions {
+            padding: 10px 20px 16px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .listing-card-actions .btn-secondary,
+        .listing-card-actions .btn-danger,
+        .listing-card-actions a,
+        .listing-card-actions span {
+            font-size: 12px !important;
+            padding: 6px 13px !important;
+        }
+        .listing-card-actions .btn-danger { margin-left: auto; }
+
+        /* Section headers */
+        .sl-section { margin-bottom: 36px; }
+        .sl-section-head {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .sl-section-head h3 {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: #6b7280;
+            margin: 0;
+        }
+        .sl-section-count {
+            font-size: 12px;
+            font-weight: 700;
+            background: #f3f4f6;
+            color: #6b7280;
+            padding: 2px 10px;
+            border-radius: 20px;
+        }
+        .sl-section-head-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .dot-active   { background: #4f46e5; }
+        .dot-inactive { background: #9ca3af; }
+        .dot-sold     { background: #2e7d32; }
+
+        /* Condensed table for inactive / sold */
+        .sl-table-wrap {
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid #ebebf2;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            overflow: hidden;
+        }
+        .sl-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        .sl-table th {
+            text-align: left; padding: 10px 14px;
+            font-size: 11px; font-weight: 700; color: #9ca3af;
+            text-transform: uppercase; letter-spacing: 0.06em;
+            border-bottom: 2px solid #f3f4f6;
+        }
+        .sl-table td { padding: 12px 14px; border-bottom: 1px solid #f9fafb; color: #374151; vertical-align: middle; }
+        .sl-table tr:last-child td { border-bottom: none; }
+        .sl-table tr:hover td { background: #fafafa; }
+
+        .empty-card {
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid #ebebf2;
+            padding: 32px;
+            text-align: center;
+            color: #9ca3af;
+            font-size: 14px;
+        }
+    </style>
 </head>
 <body>
     <nav class="first-navbar">
@@ -14,135 +89,232 @@
         </div>
     </nav>
 
-    <div class="seller-content">
+    <div class="page-banner">
+        <div class="page-banner-inner">
+            <div>
+                <h2>My Listings</h2>
+                <p>{{ active|length }} active · {{ inactive|length }} inactive · {{ sold|length }} sold</p>
+            </div>
+            <a href="/seller/listings/new" class="btn-primary">+ New Listing</a>
+        </div>
+    </div>
+
+    <div class="content-wrap">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% for category, message in messages %}
                 <div class="flash-{{ category }}">{{ message }}</div>
             {% endfor %}
         {% endwith %}
 
-        <div class="listings-header">
-            <h2>My Listings</h2>
-            <a href="/seller/listings/new" class="btn-primary">+ Create Listing</a>
+        <!-- Filter bar — identical structure to bidder browse -->
+        <div class="browse-filter-bar">
+            <label for="cat">Category</label>
+            <select id="cat">
+                <option value="">All My Listings</option>
+                {% for parent, subcats in grouped_categories.items() | sort %}
+                <optgroup label="{{ parent }}">
+                    <option value="p:{{ parent }}"
+                        {% if selected_parent == parent and not selected_category %}selected{% endif %}>
+                        All {{ parent }}
+                    </option>
+                    {% for cat in subcats %}
+                    <option value="{{ cat['category_id'] }}"
+                        {% if selected_category == cat['category_id'] %}selected{% endif %}>
+                        {{ cat['category_name'] }}
+                    </option>
+                    {% endfor %}
+                </optgroup>
+                {% endfor %}
+            </select>
+
+            <div class="filter-divider"></div>
+
+            <label for="sort-sel">Sort by</label>
+            <select id="sort-sel">
+                <option value=""           {% if not sort %}selected{% endif %}>Default</option>
+                <option value="time_asc"   {% if sort=='time_asc' %}selected{% endif %}>Ending Soon</option>
+                <option value="time_desc"  {% if sort=='time_desc' %}selected{% endif %}>Ending Last</option>
+                <option value="price_asc"  {% if sort=='price_asc' %}selected{% endif %}>Price: Low → High</option>
+                <option value="price_desc" {% if sort=='price_desc' %}selected{% endif %}>Price: High → Low</option>
+                <option value="bids_desc"  {% if sort=='bids_desc' %}selected{% endif %}>Most Bids</option>
+                <option value="bids_asc"   {% if sort=='bids_asc' %}selected{% endif %}>Fewest Bids</option>
+            </select>
+
+            {% if selected_category or selected_parent or sort %}
+            <a href="/seller/listings" class="btn-secondary" style="font-size:13px; padding:9px 16px; white-space:nowrap;">✕ Clear</a>
+            {% endif %}
+            <span class="result-count">
+                {{ (active|length) + (inactive|length) + (sold|length) }} listing{{ 's' if (active|length + inactive|length + sold|length) != 1 }}
+            </span>
         </div>
 
-        <div class="listings-section">
-            <h3>Active</h3>
+        <!-- ── Active ── -->
+        <div class="sl-section">
+            <div class="sl-section-head">
+                <div class="sl-section-head-dot dot-active"></div>
+                <h3>Active</h3>
+                <span class="sl-section-count">{{ active|length }}</span>
+            </div>
+
             {% if active %}
-            <table class="listings-table">
-                <thead>
-                    <tr>
-                        <th>Title</th>
-                        <th>Category</th>
-                        <th>Condition</th>
-                        <th>Reserve Price</th>
-                        <th>Max Bids</th>
-                        <th>Bids Placed</th>
-                        <th>Created</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for listing in active %}
-                    <tr>
-                        <td>{{ listing['title'] }}</td>
-                        <td>{{ listing['category'] }}</td>
-                        <td>{{ listing['condition'] }}</td>
-                        <td>${{ "%.2f"|format(listing['reserve_price']) }}</td>
-                        <td>{{ listing['max_bids'] }}</td>
-                        <td>{{ listing['bid_count'] }}</td>
-                        <td>{{ listing['created_at'][:10] }}</td>
-                        <td>
-                            <div class="listing-actions">
-                                {% if listing['bid_count'] == 0 %}
-                                <a href="/seller/listings/{{ listing['listing_id'] }}/edit" class="btn-secondary" style="font-size:13px; padding:5px 12px;">Edit</a>
+            <div class="listing-grid">
+                {% for listing in active %}
+                <div class="listing-card{% if listing['promoted'] %} listing-card-promoted{% endif %}">
+                    <div class="listing-card-accent"></div>
+                    <div class="listing-card-body">
+                        <div class="listing-card-top">
+                            <div class="listing-card-category">
+                                {% if listing['parent_category'] %}
+                                    <span class="cat-parent">{{ listing['parent_category'] }}</span>
                                 {% endif %}
-                                {% if listing['promoted'] %}
-                                <span class="tag" style="background:#ffe082; color:#8a6d00;">Promoted</span>
-                                {% else %}
-                                <a href="/seller/listings/{{ listing['listing_id'] }}/promote" class="btn-secondary" style="font-size:13px; padding:5px 12px;">Promote</a>
-                                {% endif %}
-                                <a href="/seller/listings/{{ listing['listing_id'] }}/remove" class="btn-danger">Remove</a>
+                                <span class="cat-name">{{ listing['category'] or 'General' }}</span>
                             </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                            <span class="listing-card-timer" data-end="{{ listing['auction_stop_time'] }}">⏱ …</span>
+                        </div>
+
+                        <div class="listing-card-title">{{ listing['title'] }}</div>
+
+                        <div class="listing-card-price">
+                            ${{ "%.2f"|format(listing['reserve_price']) }}
+                            <span>reserve</span>
+                        </div>
+
+                        <div class="listing-card-footer">
+                            <span class="listing-card-bids">
+                                🔨 {{ listing['bid_count'] }} bid{{ 's' if listing['bid_count'] != 1 }}
+                                · max {{ listing['max_bids'] }}
+                            </span>
+                            {% if listing['promoted'] %}
+                            <span class="listing-card-promoted-badge">★ Promoted</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="listing-card-actions">
+                        {% if listing['bid_count'] == 0 %}
+                        <a href="/seller/listings/{{ listing['listing_id'] }}/edit" class="btn-secondary">Edit</a>
+                        {% endif %}
+                        <a href="/seller/listings/{{ listing['listing_id'] }}/questions" class="btn-secondary">Q&A</a>
+                        {% if not listing['promoted'] %}
+                        <a href="/seller/listings/{{ listing['listing_id'] }}/promote" class="btn-secondary">Promote</a>
+                        {% endif %}
+                        <a href="/seller/listings/{{ listing['listing_id'] }}/remove" class="btn-danger">Remove</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
             {% else %}
-            <p class="empty-state">No active listings.</p>
+            <div class="empty-card">
+                No active listings{% if selected_category or selected_parent %} in this category{% endif %}.
+                <a href="/seller/listings/new" style="color:#e08311;">Create one →</a>
+            </div>
             {% endif %}
         </div>
 
-        <div class="listings-section">
-            <h3>Inactive</h3>
+        <!-- ── Inactive ── -->
+        <div class="sl-section">
+            <div class="sl-section-head">
+                <div class="sl-section-head-dot dot-inactive"></div>
+                <h3>Inactive</h3>
+                <span class="sl-section-count">{{ inactive|length }}</span>
+            </div>
+
             {% if inactive %}
-            <table class="listings-table">
-                <thead>
-                    <tr>
-                        <th>Title</th>
-                        <th>Category</th>
-                        <th>Condition</th>
-                        <th>Reserve Price</th>
-                        <th>Max Bids</th>
-                        <th>Created</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for listing in inactive %}
-                    <tr>
-                        <td>{{ listing['title'] }}</td>
-                        <td>{{ listing['category'] }}</td>
-                        <td>{{ listing['condition'] }}</td>
-                        <td>${{ "%.2f"|format(listing['reserve_price']) }}</td>
-                        <td>{{ listing['max_bids'] }}</td>
-                        <td>{{ listing['created_at'][:10] }}</td>
-                        <td>
-                            <div class="listing-actions">
-                                <a href="/seller/listings/{{ listing['listing_id'] }}/edit" class="btn-secondary" style="font-size:13px; padding:5px 12px;">Edit</a>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            <div class="sl-table-wrap">
+                <table class="sl-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Category</th>
+                            <th>Reserve</th>
+                            <th>Removal Reason</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for listing in inactive %}
+                        <tr>
+                            <td style="font-weight:600; color:#1e1e2f;">{{ listing['title'] }}</td>
+                            <td>
+                                {% if listing['parent_category'] %}<span class="cat-parent" style="margin-right:2px;">{{ listing['parent_category'] }} ›</span>{% endif %}
+                                <span class="cat-name">{{ listing['category'] or '—' }}</span>
+                            </td>
+                            <td>${{ "%.2f"|format(listing['reserve_price']) }}</td>
+                            <td style="color:#9ca3af; font-size:13px;">{{ listing['removal_reason'] or '—' }}</td>
+                            <td>
+                                <a href="/seller/listings/{{ listing['listing_id'] }}/edit" class="btn-secondary" style="font-size:12px; padding:5px 12px;">Edit</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
             {% else %}
-            <p class="empty-state">No inactive listings.</p>
+            <div class="empty-card">No inactive listings.</div>
             {% endif %}
         </div>
 
-        <div class="listings-section">
-            <h3>Sold</h3>
+        <!-- ── Sold ── -->
+        <div class="sl-section">
+            <div class="sl-section-head">
+                <div class="sl-section-head-dot dot-sold"></div>
+                <h3>Sold</h3>
+                <span class="sl-section-count">{{ sold|length }}</span>
+            </div>
+
             {% if sold %}
-            <table class="listings-table">
-                <thead>
-                    <tr>
-                        <th>Title</th>
-                        <th>Category</th>
-                        <th>Condition</th>
-                        <th>Reserve Price</th>
-                        <th>Max Bids</th>
-                        <th>Created</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for listing in sold %}
-                    <tr>
-                        <td>{{ listing['title'] }}</td>
-                        <td>{{ listing['category'] }}</td>
-                        <td>{{ listing['condition'] }}</td>
-                        <td>${{ "%.2f"|format(listing['reserve_price']) }}</td>
-                        <td>{{ listing['max_bids'] }}</td>
-                        <td>{{ listing['created_at'][:10] }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            <div class="sl-table-wrap">
+                <table class="sl-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Category</th>
+                            <th>Reserve</th>
+                            <th>Max Bids</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for listing in sold %}
+                        <tr>
+                            <td style="font-weight:600; color:#1e1e2f;">{{ listing['title'] }}</td>
+                            <td>
+                                {% if listing['parent_category'] %}<span class="cat-parent" style="margin-right:2px;">{{ listing['parent_category'] }} ›</span>{% endif %}
+                                <span class="cat-name">{{ listing['category'] or '—' }}</span>
+                            </td>
+                            <td>${{ "%.2f"|format(listing['reserve_price']) }}</td>
+                            <td>{{ listing['max_bids'] }}</td>
+                            <td style="color:#9ca3af;">{{ listing['created_at'][:10] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
             {% else %}
-            <p class="empty-state">No sold listings.</p>
+            <div class="empty-card">No sold listings yet.</div>
             {% endif %}
         </div>
     </div>
+
+    <script src="{{ url_for('static', filename='timer.js') }}"></script>
+    <script>
+        function buildUrl(catVal, sortVal) {
+            var params = new URLSearchParams();
+            if (catVal.startsWith('p:')) params.set('parent_category', catVal.slice(2));
+            else if (catVal) params.set('category_id', catVal);
+            if (sortVal) params.set('sort', sortVal);
+            var qs = params.toString();
+            return '/seller/listings' + (qs ? '?' + qs : '');
+        }
+
+        var catSel  = document.getElementById('cat');
+        var sortSel = document.getElementById('sort-sel');
+
+        catSel.addEventListener('change', function () {
+            window.location.href = buildUrl(this.value, sortSel.value);
+        });
+        sortSel.addEventListener('change', function () {
+            window.location.href = buildUrl(catSel.value, this.value);
+        });
+    </script>
 </body>
 </html>

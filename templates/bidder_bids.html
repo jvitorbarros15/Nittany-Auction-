@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Bids — NittanyAuction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .bids-table-wrap {
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid #ebebf2;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            overflow: hidden;
+            margin-bottom: 36px;
+        }
+        .bids-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        .bids-table th {
+            text-align: left; padding: 10px 16px;
+            font-size: 11px; font-weight: 700; color: #9ca3af;
+            text-transform: uppercase; letter-spacing: 0.06em;
+            border-bottom: 2px solid #f3f4f6;
+        }
+        .bids-table td { padding: 14px 16px; border-bottom: 1px solid #f9fafb; color: #374151; vertical-align: middle; }
+        .bids-table tr:last-child td { border-bottom: none; }
+        .bids-table tr:hover td { background: #fafafa; }
+        .badge-winning  { background: #d1fae5; color: #065f46; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+        .badge-outbid   { background: #fee2e2; color: #991b1b; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+        .badge-won      { background: #d1fae5; color: #065f46; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+        .badge-lost     { background: #f3f4f6; color: #6b7280; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+        .sl-section-head { display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+        .sl-section-head h3 { font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:#6b7280; margin:0; }
+        .sl-section-count { font-size:12px; font-weight:700; background:#f3f4f6; color:#6b7280; padding:2px 10px; border-radius:20px; }
+        .sl-section-head-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+        .dot-active { background:#4f46e5; }
+        .dot-ended  { background:#9ca3af; }
+        .empty-card { background:#fff; border-radius:16px; border:1px solid #ebebf2; padding:40px; text-align:center; color:#9ca3af; font-size:14px; }
+        .qa-card {
+            background: #fff;
+            border: 1px solid #ebebf2;
+            border-radius: 14px;
+            padding: 18px 22px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .qa-listing-link { font-size: 12px; color: #4f46e5; text-decoration: none; font-weight: 600; }
+        .qa-listing-link:hover { text-decoration: underline; }
+        .qa-question-text { font-size: 15px; font-weight: 600; color: #1e1e2f; margin: 6px 0 4px; }
+        .qa-meta { font-size: 12px; color: #9ca3af; margin-bottom: 12px; }
+        .qa-answer-box {
+            background: #f0f4ff;
+            border-left: 3px solid #4f46e5;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 14px;
+            color: #374151;
+        }
+        .qa-answer-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #4f46e5; margin-bottom: 3px; }
+        .qa-pending { font-size: 13px; color: #9ca3af; font-style: italic; }
+    </style>
+</head>
+<body>
+    <nav class="first-navbar">
+        <img src="{{ url_for('static', filename='logo.svg') }}" alt="NittanyAuction" height="36">
+        <div class="nav-links">
+            <span class="nav-user">{{ email }}</span>
+            <a href="/bidder">Dashboard</a>
+            <a href="/bidder/listings">Browse</a>
+            <a href="/logout">Logout</a>
+        </div>
+    </nav>
+
+    <div class="page-banner">
+        <div class="page-banner-inner">
+            <div>
+                <h2>My Bids</h2>
+                <p>{{ active_bids|length }} active · {{ ended_bids|length }} ended</p>
+            </div>
+            <a href="/bidder/listings" class="btn-primary">Browse More →</a>
+        </div>
+    </div>
+
+    <div class="content-wrap">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <!-- Active -->
+        <div>
+            <div class="sl-section-head">
+                <div class="sl-section-head-dot dot-active"></div>
+                <h3>Active Auctions</h3>
+                <span class="sl-section-count">{{ active_bids|length }}</span>
+            </div>
+
+            {% if active_bids %}
+            <div class="bids-table-wrap">
+                <table class="bids-table">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Category</th>
+                            <th>Your Bid</th>
+                            <th>Top Bid</th>
+                            <th>Status</th>
+                            <th>Ends</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for b in active_bids %}
+                        <tr>
+                            <td style="font-weight:600; color:#1e1e2f;">{{ b['title'] }}</td>
+                            <td style="color:#9ca3af; font-size:13px;">{{ b['category_name'] or '—' }}</td>
+                            <td>${{ "%.2f"|format(b['my_bid']) }}</td>
+                            <td>${{ "%.2f"|format(b['top_bid']) }}</td>
+                            <td>
+                                {% if b['top_bidder'] == email %}
+                                <span class="badge-winning">Winning</span>
+                                {% else %}
+                                <span class="badge-outbid">Outbid</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="listing-card-timer" data-end="{{ b['auction_stop_time'] }}">⏱ …</span>
+                            </td>
+                            <td>
+                                <a href="/bidder/listings/{{ b['listing_id'] }}" class="btn-secondary" style="font-size:12px; padding:5px 12px;">View</a>
+                                {% if b['top_bidder'] != email %}
+                                <a href="/bidder/listings/{{ b['listing_id'] }}/bid" class="btn-primary" style="font-size:12px; padding:5px 12px;">Bid Again</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-card" style="margin-bottom:36px;">
+                You have no active bids. <a href="/bidder/listings" style="color:#e08311;">Browse listings →</a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Ended -->
+        <div>
+            <div class="sl-section-head">
+                <div class="sl-section-head-dot dot-ended"></div>
+                <h3>Ended Auctions</h3>
+                <span class="sl-section-count">{{ ended_bids|length }}</span>
+            </div>
+
+            {% if ended_bids %}
+            <div class="bids-table-wrap">
+                <table class="bids-table">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Category</th>
+                            <th>Your Bid</th>
+                            <th>Final Price</th>
+                            <th>Result</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for b in ended_bids %}
+                        <tr>
+                            <td style="font-weight:600; color:#1e1e2f;">{{ b['title'] }}</td>
+                            <td style="color:#9ca3af; font-size:13px;">{{ b['category_name'] or '—' }}</td>
+                            <td>${{ "%.2f"|format(b['my_bid']) }}</td>
+                            <td>${{ "%.2f"|format(b['top_bid']) }}</td>
+                            <td>
+                                {% if b['top_bidder'] == email %}
+                                <span class="badge-won">Won</span>
+                                {% else %}
+                                <span class="badge-lost">Lost</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="/bidder/listings/{{ b['listing_id'] }}" class="btn-secondary" style="font-size:12px; padding:5px 12px;">View</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-card">No ended auctions yet.</div>
+            {% endif %}
+        </div>
+
+        <!-- My Questions -->
+        <div>
+            <div class="sl-section-head">
+                <div class="sl-section-head-dot" style="background:#e08311;"></div>
+                <h3>My Questions</h3>
+                <span class="sl-section-count">{{ my_questions|length }}</span>
+            </div>
+
+            {% if my_questions %}
+                {% for q in my_questions %}
+                <div class="qa-card">
+                    <a href="/bidder/listings/{{ q['listing_id'] }}" class="qa-listing-link">{{ q['listing_title'] }} →</a>
+                    <div class="qa-question-text">{{ q['question_text'] }}</div>
+                    <div class="qa-meta">Asked {{ q['asked_at'][:16].replace('T', ' ') }}</div>
+                    {% if q['answer_text'] %}
+                    <div class="qa-answer-box">
+                        <div class="qa-answer-label">Seller's Answer</div>
+                        {{ q['answer_text'] }}
+                    </div>
+                    {% else %}
+                    <div class="qa-pending">Awaiting seller response…</div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% else %}
+            <div class="empty-card">You haven't asked any questions yet.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='timer.js') }}"></script>
+</body>
+</html>

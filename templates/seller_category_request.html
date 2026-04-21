@@ -27,8 +27,17 @@
         <div class="form-card" style="margin-bottom:28px;">
             <form method="POST">
                 <div class="form-group">
-                    <label for="category_name">Category Name</label>
+                    <label for="category_name">New Category Name</label>
                     <input type="text" id="category_name" name="category_name" required placeholder="e.g. Vintage Electronics">
+                </div>
+                <div class="form-group">
+                    <label for="parent_category">Parent Category</label>
+                    <select id="parent_category" name="parent_category">
+                        <option value="Root">— Top level (no parent) —</option>
+                        {% for pc in parent_categories %}
+                        <option value="{{ pc['category_name'] }}">{{ pc['category_name'] }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
                 <div class="form-group">
                     <label for="details">Details (optional)</label>
@@ -48,9 +57,9 @@
                 <thead>
                     <tr>
                         <th>Category</th>
+                        <th>Parent</th>
                         <th>Details</th>
                         <th>Status</th>
-                        <th>Assigned To</th>
                         <th>Submitted</th>
                     </tr>
                 </thead>
@@ -58,9 +67,9 @@
                     {% for r in my_requests %}
                     <tr>
                         <td>{{ r['category_name'] }}</td>
+                        <td>{{ r['parent_category'] or 'Root' }}</td>
                         <td>{{ r['details'] or '—' }}</td>
                         <td>{{ r['status'].title() }}</td>
-                        <td>{{ r['assigned_to'] }}</td>
                         <td>{{ r['submitted_at'][:16].replace('T', ' ') }}</td>
                     </tr>
                     {% endfor %}

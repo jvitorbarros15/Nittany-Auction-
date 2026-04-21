@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Profile — NittanyAuction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="first-navbar">
+        <a href="/dashboard"><img src="{{ url_for('static', filename='logo.svg') }}" alt="NittanyAuction" height="36"></a>
+        <div class="nav-links">
+            <span class="nav-user">{{ email }}</span>
+            <a href="/seller">Dashboard</a>
+            <a href="/seller/listings">My Listings</a>
+            <a href="/logout">Logout</a>
+        </div>
+    </nav>
+
+    <div class="page-banner">
+        <div class="page-banner-inner">
+            <div>
+                <h2>My Profile</h2>
+                <p>Update your account information and password</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-wrap">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; align-items:start;">
+
+            <!-- Account Info -->
+            <div class="form-card">
+                <h3 style="font-size:15px; font-weight:700; color:#1e1e2f; margin:0 0 18px;">Account Information</h3>
+                <form method="POST">
+                    <input type="hidden" name="action" value="update_profile">
+
+                    <div class="form-group">
+                        <label>Email (cannot be changed)</label>
+                        <input type="text" value="{{ email }}" disabled style="background:#f9fafb; color:#9ca3af;">
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+                        <div class="form-group">
+                            <label for="first_name">First Name</label>
+                            <input type="text" id="first_name" name="first_name"
+                                   value="{{ profile['first_name'] if profile and profile['first_name'] else '' }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="last_name">Last Name</label>
+                            <input type="text" id="last_name" name="last_name"
+                                   value="{{ profile['last_name'] if profile and profile['last_name'] else '' }}">
+                        </div>
+                    </div>
+
+                    <h4 style="font-size:13px; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:0.06em; margin:18px 0 12px;">Bank Details</h4>
+                    <div class="form-group">
+                        <label for="bank_routing_number">Routing Number</label>
+                        <input type="text" id="bank_routing_number" name="bank_routing_number"
+                               value="{{ profile['bank_routing_number'] if profile and profile['bank_routing_number'] else '' }}"
+                               placeholder="9-digit routing number">
+                    </div>
+                    <div class="form-group">
+                        <label for="bank_account_number">Account Number</label>
+                        <input type="text" id="bank_account_number" name="bank_account_number"
+                               value="{{ profile['bank_account_number'] if profile and profile['bank_account_number'] else '' }}"
+                               placeholder="Bank account number">
+                    </div>
+
+                    {% if profile and profile['business_name'] is not none %}
+                    <h4 style="font-size:13px; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:0.06em; margin:18px 0 12px;">Business Info (Vendor)</h4>
+                    <div class="form-group">
+                        <label for="business_name">Business Name</label>
+                        <input type="text" id="business_name" name="business_name"
+                               value="{{ profile['business_name'] or '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="business_address">Business Address</label>
+                        <input type="text" id="business_address" name="business_address"
+                               value="{{ profile['business_address'] or '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="customer_service_phone">Customer Service Phone</label>
+                        <input type="tel" id="customer_service_phone" name="customer_service_phone"
+                               value="{{ profile['customer_service_phone'] or '' }}">
+                    </div>
+                    {% else %}
+                    <input type="hidden" name="business_name" value="">
+                    <input type="hidden" name="business_address" value="">
+                    <input type="hidden" name="customer_service_phone" value="">
+                    {% endif %}
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Change Password -->
+            <div class="form-card">
+                <h3 style="font-size:15px; font-weight:700; color:#1e1e2f; margin:0 0 18px;">Change Password</h3>
+                <form method="POST">
+                    <input type="hidden" name="action" value="change_password">
+                    <div class="form-group">
+                        <label for="current_password">Current Password</label>
+                        <input type="password" id="current_password" name="current_password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="new_password">New Password</label>
+                        <input type="password" id="new_password" name="new_password" required minlength="6">
+                    </div>
+                    <div class="form-group">
+                        <label for="confirm_password">Confirm New Password</label>
+                        <input type="password" id="confirm_password" name="confirm_password" required minlength="6">
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">Update Password</button>
+                    </div>
+                </form>
+
+                {% if profile %}
+                <div style="margin-top:28px; padding-top:20px; border-top:1px solid #f3f4f6;">
+                    <h4 style="font-size:13px; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:0.06em; margin:0 0 12px;">Account Balance</h4>
+                    <div style="font-size:28px; font-weight:800; color:#2e7d32;">
+                        ${{ "%.2f"|format(profile['balance'] or 0) }}
+                    </div>
+                    <p style="font-size:13px; color:#9ca3af; margin-top:4px;">Earnings from completed auctions</p>
+                </div>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>

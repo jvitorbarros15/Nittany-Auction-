@@ -90,6 +90,7 @@ def init_db():
             requester_email  TEXT NOT NULL,
             request_type     TEXT NOT NULL DEFAULT 'add_category',
             category_name    TEXT,
+            parent_category  TEXT,
             details          TEXT,
             assigned_to      TEXT NOT NULL DEFAULT 'helpdeskteam@lsu.edu',
             status           TEXT NOT NULL DEFAULT 'unassigned',
@@ -111,7 +112,22 @@ def init_db():
             is_read    INTEGER DEFAULT 0,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );
+        CREATE TABLE IF NOT EXISTS sellers (
+            email               TEXT PRIMARY KEY,
+            first_name          TEXT,
+            last_name           TEXT,
+            bank_routing_number TEXT,
+            bank_account_number TEXT,
+            balance             REAL DEFAULT 0.0,
+            business_name       TEXT,
+            business_address    TEXT,
+            customer_service_phone TEXT
+        );
     """)
+
+    req_cols = {row[1] for row in conn.execute("PRAGMA table_info(helpdesk_requests)").fetchall()}
+    if "parent_category" not in req_cols:
+        conn.execute("ALTER TABLE helpdesk_requests ADD COLUMN parent_category TEXT")
 
     existing_cols = {row[1] for row in conn.execute("PRAGMA table_info(listings)").fetchall()}
     if "promoted" not in existing_cols:
@@ -291,6 +307,73 @@ def seller():
     if guard:
         return guard
     return render_template("seller_welcome.html", email=session["email"])
+
+@app.route("/seller/profile", methods=["GET", "POST"])
+def seller_profile():
+    guard = role_required("seller")
+    if guard:
+        return guard
+
+    email = session["email"]
+
+    with sqlite3.connect("nittanyauction.db") as conn:
+        conn.row_factory = sqlite3.Row
+
+        if request.method == "POST":
+            action = request.form.get("action")
+
+            if action == "update_profile":
+                conn.execute("""
+                    INSERT INTO sellers (email, first_name, last_name, bank_routing_number,
+                                        bank_account_number, business_name, business_address,
+                                        customer_service_phone)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(email) DO UPDATE SET
+                        first_name=excluded.first_name,
+                        last_name=excluded.last_name,
+                        bank_routing_number=excluded.bank_routing_number,
+                        bank_account_number=excluded.bank_account_number,
+                        business_name=excluded.business_name,
+                        business_address=excluded.business_address,
+                        customer_service_phone=excluded.customer_service_phone
+                """, (email,
+                      request.form.get("first_name", "").strip(),
+                      request.form.get("last_name", "").strip(),
+                      request.form.get("bank_routing_number", "").strip(),
+                      request.form.get("bank_account_number", "").strip(),
+                      request.form.get("business_name", "").strip(),
+                      request.form.get("business_address", "").strip(),
+                      request.form.get("customer_service_phone", "").strip()))
+                flash("Profile updated successfully.", "success")
+
+            elif action == "change_password":
+                current_pw  = request.form.get("current_password", "")
+                new_pw      = request.form.get("new_password", "")
+                confirm_pw  = request.form.get("confirm_password", "")
+                auth = conn.execute(
+                    "SELECT password_hash, salt FROM auth_users WHERE email = ?", (email,)
+                ).fetchone()
+                hashed_current = hashlib.sha256((auth["salt"] + current_pw).encode()).hexdigest()
+                if hashed_current != auth["password_hash"]:
+                    flash("Current password is incorrect.", "error")
+                elif new_pw != confirm_pw:
+                    flash("New passwords do not match.", "error")
+                elif len(new_pw) < 6:
+                    flash("Password must be at least 6 characters.", "error")
+                else:
+                    new_hash = hashlib.sha256((auth["salt"] + new_pw).encode()).hexdigest()
+                    conn.execute(
+                        "UPDATE auth_users SET password_hash = ? WHERE email = ?",
+                        (new_hash, email)
+                    )
+                    flash("Password updated successfully.", "success")
+
+            return redirect("/seller/profile")
+
+        profile = conn.execute("SELECT * FROM sellers WHERE email = ?", (email,)).fetchone()
+
+    return render_template("seller_profile.html", email=email, profile=profile)
+
 
 @app.route("/seller/listings")
 def seller_listings():
@@ -1263,9 +1346,10 @@ def helpdesk_complete(request_id):
                 (req["category_name"],)
             ).fetchone()
             if not existing:
+                parent = req["parent_category"] or "Root"
                 conn.execute(
-                    "INSERT INTO categories (category_name) VALUES (?)",
-                    (req["category_name"],)
+                    "INSERT INTO categories (category_name, parent_category) VALUES (?, ?)",
+                    (req["category_name"], parent)
                 )
 
         conn.execute(
@@ -1286,17 +1370,18 @@ def seller_category_request():
     email = session["email"]
 
     if request.method == "POST":
-        category_name = request.form.get("category_name", "").strip()
-        details       = request.form.get("details", "").strip()
+        category_name   = request.form.get("category_name", "").strip()
+        parent_category = request.form.get("parent_category", "").strip()
+        details         = request.form.get("details", "").strip()
         if not category_name:
             flash("Please enter a category name.", "error")
             return redirect("/seller/category-request")
 
         with sqlite3.connect("nittanyauction.db") as conn:
             conn.execute("""
-                INSERT INTO helpdesk_requests (requester_email, request_type, category_name, details)
-                VALUES (?, 'add_category', ?, ?)
-            """, (email, category_name, details))
+                INSERT INTO helpdesk_requests (requester_email, request_type, category_name, parent_category, details)
+                VALUES (?, 'add_category', ?, ?, ?)
+            """, (email, category_name, parent_category or "Root", details))
 
         flash("Your request has been submitted to HelpDesk.", "success")
         return redirect("/seller/category-request")
@@ -1308,9 +1393,13 @@ def seller_category_request():
             WHERE requester_email = ? AND request_type = 'add_category'
             ORDER BY submitted_at DESC
         """, (email,)).fetchall()
+        parent_categories = conn.execute(
+            "SELECT DISTINCT category_name FROM categories WHERE parent_category = 'Root' ORDER BY category_name"
+        ).fetchall()
 
     return render_template("seller_category_request.html",
-                           email=email, my_requests=my_requests)
+                           email=email, my_requests=my_requests,
+                           parent_categories=parent_categories)
 
 
 @app.route("/seller/listings/<int:listing_id>/promote", methods=["GET", "POST"])
@@ -1452,9 +1541,9 @@ def register():
         password = request.form["password"]
         role = request.form.get("role")
 
-        valid_roles = ["seller", "buyer", "helpdesk"]
+        valid_roles = ["seller", "buyer"]
         if role not in valid_roles:
-            flash("Invalid role selected.")
+            flash("HelpDesk accounts are created internally. Please select Bidder or Seller.", "error")
             return redirect("/register")
 
         connection = sqlite3.connect("nittanyauction.db")

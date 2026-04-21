@@ -3,13 +3,134 @@
 <head>
     <title>Browse Listings — NittanyAuction</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        /* ── Two-column layout ── */
+        .listings-layout {
+            display: flex;
+            gap: 24px;
+            align-items: flex-start;
+        }
+        .listings-main { flex: 1; min-width: 0; }
+
+        /* ── Category Sidebar ── */
+        .cat-sidebar {
+            width: 210px;
+            flex-shrink: 0;
+            background: #fff;
+            border: 1px solid #ebebf2;
+            border-radius: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            overflow: hidden;
+            position: sticky;
+            top: 20px;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+        .cat-sidebar-head {
+            padding: 13px 16px 10px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #6b7280;
+            border-bottom: 2px solid #f3f4f6;
+            position: sticky;
+            top: 0;
+            background: #fff;
+            z-index: 1;
+        }
+        .cat-sidebar-all {
+            display: block;
+            padding: 10px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+            text-decoration: none;
+            border-bottom: 1px solid #f3f4f6;
+            transition: background 0.12s;
+        }
+        .cat-sidebar-all:hover { background: #f5f3ff; color: #4f46e5; }
+        .cat-sidebar-all.active { background: #eef2ff; color: #4f46e5; }
+
+        .cat-sidebar-group { border-bottom: 1px solid #f3f4f6; }
+        .cat-sidebar-group:last-child { border-bottom: none; }
+
+        .cat-sidebar-parent {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 9px 16px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #374151;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.12s;
+            text-decoration: none;
+        }
+        .cat-sidebar-parent:hover { background: #f9fafb; }
+        .cat-sidebar-parent.active { color: #4f46e5; background: #eef2ff; }
+        .cat-sidebar-parent .chevron {
+            font-size: 11px;
+            color: #9ca3af;
+            transition: transform 0.2s;
+            flex-shrink: 0;
+        }
+        .cat-sidebar-parent.open .chevron { transform: rotate(90deg); }
+
+        .cat-sidebar-children { display: none; background: #fafafa; }
+        .cat-sidebar-children.open { display: block; }
+
+        .cat-sidebar-child {
+            display: block;
+            padding: 6px 16px 6px 28px;
+            font-size: 13px;
+            color: #6b7280;
+            text-decoration: none;
+            transition: background 0.1s, color 0.1s;
+        }
+        .cat-sidebar-child:hover { background: #eef2ff; color: #4f46e5; }
+        .cat-sidebar-child.active { background: #eef2ff; color: #4f46e5; font-weight: 600; }
+        .cat-sidebar-child-all {
+            font-size: 12px;
+            color: #9ca3af;
+            border-bottom: 1px solid #f0f0f0;
+            padding-bottom: 7px;
+            margin-bottom: 1px;
+        }
+        .cat-sidebar-child-all:hover { color: #4f46e5; }
+        .cat-sidebar-child-all.active { color: #4f46e5; font-weight: 600; }
+
+        /* ── Filter chip ── */
+        .filter-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #eef2ff;
+            color: #4f46e5;
+            border: 1px solid #c7d2fe;
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 14px;
+        }
+        .filter-chip a {
+            color: #4f46e5;
+            text-decoration: none;
+            font-size: 14px;
+            line-height: 1;
+        }
+    </style>
 </head>
 <body>
     <nav class="first-navbar">
-        <img src="{{ url_for('static', filename='logo.svg') }}" alt="NittanyAuction" height="36">
+        <a href="/dashboard"><img src="{{ url_for('static', filename='logo.svg') }}" alt="NittanyAuction" height="36"></a>
         <div class="nav-links">
             <span class="nav-user">{{ email }}</span>
             <a href="/bidder">Dashboard</a>
+            <a href="/bidder/bids">My Bids</a>
+            <a href="/bidder/watchlist">★ Watchlist</a>
             <a href="/logout">Logout</a>
         </div>
     </nav>
@@ -25,7 +146,6 @@
                     {% endif %}
                 </p>
             </div>
-            <a href="/bidder/watchlist" class="btn-secondary" style="font-size:13px;">★ My Watchlist</a>
         </div>
     </div>
 
@@ -36,13 +156,14 @@
             {% endfor %}
         {% endwith %}
 
-        <!-- Filter bar -->
-        <div class="browse-filter-bar">
+        <!-- Search + sort bar -->
+        <div class="browse-filter-bar" style="margin-bottom:16px;">
             <form id="search-form" method="GET" action="/bidder/listings" style="display:contents;">
+                {% if selected_category %}<input type="hidden" name="category_id" value="{{ selected_category }}">{% endif %}
+                {% if selected_parent %}<input type="hidden" name="parent_category" value="{{ selected_parent }}">{% endif %}
                 <input type="text" id="search-input" name="q" value="{{ query }}"
                        placeholder="Search title, category, seller…"
-                       style="flex:1; min-width:160px; max-width:240px; padding:9px 14px; border:1.5px solid #e5e7eb; border-radius:10px; font-size:14px; outline:none;"
-                       onkeydown="if(event.key==='Enter'){this.form.submit();}">
+                       style="flex:1; min-width:160px; max-width:260px; padding:9px 14px; border:1.5px solid #e5e7eb; border-radius:10px; font-size:14px; outline:none;">
                 <input type="number" name="min_price" value="{{ min_price or '' }}" placeholder="Min $"
                        step="0.01" min="0"
                        style="width:80px; padding:9px 10px; border:1.5px solid #e5e7eb; border-radius:10px; font-size:14px; outline:none;">
@@ -51,27 +172,6 @@
                        style="width:80px; padding:9px 10px; border:1.5px solid #e5e7eb; border-radius:10px; font-size:14px; outline:none;">
                 <button type="submit" style="padding:9px 14px; background:#4f46e5; color:#fff; border:none; border-radius:10px; font-size:13px; cursor:pointer;">Search</button>
             </form>
-
-            <div class="filter-divider"></div>
-
-            <label for="cat">Category</label>
-            <select id="cat">
-                <option value="">All Categories</option>
-                {% for parent, subcats in grouped_categories.items() | sort %}
-                <optgroup label="{{ parent }}">
-                    <option value="p:{{ parent }}"
-                        {% if selected_parent == parent and not selected_category %}selected{% endif %}>
-                        All {{ parent }}
-                    </option>
-                    {% for cat in subcats %}
-                    <option value="{{ cat['category_id'] }}"
-                        {% if selected_category == cat['category_id'] %}selected{% endif %}>
-                        {{ cat['category_name'] }}
-                    </option>
-                    {% endfor %}
-                </optgroup>
-                {% endfor %}
-            </select>
 
             <div class="filter-divider"></div>
 
@@ -85,83 +185,148 @@
             </select>
 
             {% if selected_category or selected_parent or sort or query or min_price or max_price %}
-            <a href="/bidder/listings" class="btn-secondary" style="font-size:13px; padding:9px 16px; white-space:nowrap;">✕ Clear</a>
+            <a href="/bidder/listings" class="btn-secondary" style="font-size:13px; padding:9px 16px; white-space:nowrap;">✕ Clear all</a>
             {% endif %}
             <span class="result-count">{{ listings|length }} result{{ 's' if listings|length != 1 }}</span>
         </div>
 
-        {% if listings %}
-        <div class="listing-grid">
-            {% for listing in listings %}
-            <a href="/bidder/listings/{{ listing['listing_id'] }}" class="listing-card{% if listing['promoted'] %} listing-card-promoted{% endif %}">
-                <div class="listing-card-accent"></div>
-                <div class="listing-card-body">
-                    <div class="listing-card-top">
-                        <div class="listing-card-category">
-                            {% if listing['parent_category'] %}
-                                <span class="cat-parent">{{ listing['parent_category'] }}</span>
-                            {% endif %}
-                            <span class="cat-name">{{ listing['category_name'] or 'General' }}</span>
-                        </div>
-                        <span class="listing-card-timer" data-end="{{ listing['auction_stop_time'] }}">⏱ …</span>
-                    </div>
-
-                    <div class="listing-card-title">{{ listing['title'] }}</div>
-
-                    <div class="listing-card-price">
-                        {% if listing['current_bid'] %}
-                        ${{ "%.2f"|format(listing['current_bid']) }}
-                        <span>current bid</span>
-                        {% else %}
-                        <span style="color:#9ca3af; font-size:14px;">No bids yet</span>
-                        {% endif %}
-                    </div>
-
-                    <div class="listing-card-footer">
-                        <span class="listing-card-bids">
-                            🔨 {{ listing['bid_count'] }} bid{{ 's' if listing['bid_count'] != 1 }}
-                        </span>
-                        {% if listing['promoted'] %}
-                        <span class="listing-card-promoted-badge">★ Promoted</span>
-                        {% endif %}
-                    </div>
-                </div>
-            </a>
-            {% endfor %}
-        </div>
-        {% else %}
-        <div style="text-align:center; padding:80px 24px; color:#aaa;">
-            <div style="font-size:40px; margin-bottom:16px;">🔍</div>
-            <p style="font-size:16px; font-weight:600; color:#555; margin-bottom:8px;">No listings found</p>
-            <p style="font-size:14px;">
-                {% if selected_category or selected_parent %}Try a different category or <a href="/bidder/listings" style="color:#e08311;">view all</a>.
-                {% else %}Check back soon for new auctions.{% endif %}
-            </p>
+        <!-- Active category chip -->
+        {% if selected_category or selected_parent %}
+        <div>
+            <span class="filter-chip">
+                {% if selected_category %}
+                    {% for parent, subcats in grouped_categories.items() %}{% for cat in subcats %}{% if cat['category_id'] == selected_category %}{{ parent }} › {{ cat['category_name'] }}{% endif %}{% endfor %}{% endfor %}
+                {% elif selected_parent %}
+                    {{ selected_parent }}
+                {% endif %}
+                <a href="/bidder/listings?{% if query %}q={{ query }}&{% endif %}{% if sort %}sort={{ sort }}&{% endif %}{% if min_price %}min_price={{ min_price }}&{% endif %}{% if max_price %}max_price={{ max_price }}{% endif %}">✕</a>
+            </span>
         </div>
         {% endif %}
+
+        <!-- Two-column layout -->
+        <div class="listings-layout">
+
+            <!-- ── Left sidebar ── -->
+            <nav class="cat-sidebar">
+                <div class="cat-sidebar-head">Department</div>
+
+                <a href="/bidder/listings?{% if query %}q={{ query }}&{% endif %}{% if sort %}sort={{ sort }}&{% endif %}{% if min_price %}min_price={{ min_price }}&{% endif %}{% if max_price %}max_price={{ max_price }}{% endif %}"
+                   class="cat-sidebar-all {% if not selected_category and not selected_parent %}active{% endif %}">
+                    All Departments
+                </a>
+
+                {# Root-level categories are those whose parent_category = 'Root' #}
+                {% set root_cats = grouped_categories.get('Root', []) | sort(attribute='category_name') %}
+                {% for root_cat in root_cats %}
+                    {% set children = grouped_categories.get(root_cat['category_name'], []) | sort(attribute='category_name') %}
+                    {# Determine if this group is active — use namespace to allow mutation inside loop #}
+                    {% set ns = namespace(group_active=(selected_parent == root_cat['category_name'])) %}
+                    {% if selected_category %}
+                        {% for c in children %}{% if c['category_id'] == selected_category %}{% set ns.group_active = true %}{% endif %}{% endfor %}
+                    {% endif %}
+                    {% set group_active = ns.group_active %}
+
+                    <div class="cat-sidebar-group">
+                        {% if children %}
+                        <div class="cat-sidebar-parent {% if group_active %}active open{% endif %}"
+                             onclick="toggleGroup(this)">
+                            {{ root_cat['category_name'] }}
+                            <span class="chevron">›</span>
+                        </div>
+                        <div class="cat-sidebar-children {% if group_active %}open{% endif %}">
+                            <a href="/bidder/listings?parent_category={{ root_cat['category_name'] | urlencode }}{% if query %}&q={{ query }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}{% if min_price %}&min_price={{ min_price }}{% endif %}{% if max_price %}&max_price={{ max_price }}{% endif %}"
+                               class="cat-sidebar-child cat-sidebar-child-all {% if selected_parent == root_cat['category_name'] and not selected_category %}active{% endif %}">
+                                All {{ root_cat['category_name'] }}
+                            </a>
+                            {% for child in children %}
+                            <a href="/bidder/listings?category_id={{ child['category_id'] }}{% if query %}&q={{ query }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}{% if min_price %}&min_price={{ min_price }}{% endif %}{% if max_price %}&max_price={{ max_price }}{% endif %}"
+                               class="cat-sidebar-child {% if selected_category == child['category_id'] %}active{% endif %}">
+                                {{ child['category_name'] }}
+                            </a>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <a href="/bidder/listings?parent_category={{ root_cat['category_name'] | urlencode }}{% if query %}&q={{ query }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}{% if min_price %}&min_price={{ min_price }}{% endif %}{% if max_price %}&max_price={{ max_price }}{% endif %}"
+                           class="cat-sidebar-parent {% if selected_parent == root_cat['category_name'] %}active{% endif %}">
+                            {{ root_cat['category_name'] }}
+                            <span></span>
+                        </a>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </nav>
+
+            <!-- ── Listings grid ── -->
+            <div class="listings-main">
+                {% if listings %}
+                <div class="listing-grid">
+                    {% for listing in listings %}
+                    <a href="/bidder/listings/{{ listing['listing_id'] }}" class="listing-card{% if listing['promoted'] %} listing-card-promoted{% endif %}">
+                        <div class="listing-card-accent"></div>
+                        <div class="listing-card-body">
+                            <div class="listing-card-top">
+                                <div class="listing-card-category">
+                                    {% if listing['parent_category'] %}
+                                        <span class="cat-parent">{{ listing['parent_category'] }}</span>
+                                    {% endif %}
+                                    <span class="cat-name">{{ listing['category_name'] or 'General' }}</span>
+                                </div>
+                                <span class="listing-card-timer" data-end="{{ listing['auction_stop_time'] }}">⏱ …</span>
+                            </div>
+
+                            <div class="listing-card-title">{{ listing['title'] }}</div>
+
+                            <div class="listing-card-price">
+                                {% if listing['current_bid'] %}
+                                ${{ "%.2f"|format(listing['current_bid']) }}
+                                <span>current bid</span>
+                                {% else %}
+                                <span style="color:#9ca3af; font-size:14px;">No bids yet</span>
+                                {% endif %}
+                            </div>
+
+                            <div class="listing-card-footer">
+                                <span class="listing-card-bids">
+                                    🔨 {{ listing['bid_count'] }} bid{{ 's' if listing['bid_count'] != 1 }}
+                                </span>
+                                {% if listing['promoted'] %}
+                                <span class="listing-card-promoted-badge">★ Promoted</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div style="text-align:center; padding:80px 24px; color:#aaa;">
+                    <div style="font-size:40px; margin-bottom:16px;">🔍</div>
+                    <p style="font-size:16px; font-weight:600; color:#555; margin-bottom:8px;">No listings found</p>
+                    <p style="font-size:14px;">
+                        {% if selected_category or selected_parent %}Try a different category or <a href="/bidder/listings" style="color:#e08311;">view all</a>.
+                        {% else %}Check back soon for new auctions.{% endif %}
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+
+        </div><!-- /listings-layout -->
     </div>
 
     <script src="{{ url_for('static', filename='timer.js') }}"></script>
     <script>
-        function buildUrl(catVal, sortVal) {
-            var params = new URLSearchParams();
-            var q = document.getElementById('search-input').value.trim();
-            if (q) params.set('q', q);
-            if (catVal.startsWith('p:')) params.set('parent_category', catVal.slice(2));
-            else if (catVal) params.set('category_id', catVal);
-            if (sortVal) params.set('sort', sortVal);
-            var qs = params.toString();
-            return '/bidder/listings' + (qs ? '?' + qs : '');
+        function toggleGroup(el) {
+            el.classList.toggle('open');
+            var children = el.nextElementSibling;
+            if (children) children.classList.toggle('open');
         }
 
-        var catSel  = document.getElementById('cat');
-        var sortSel = document.getElementById('sort-sel');
-
-        catSel.addEventListener('change', function () {
-            window.location.href = buildUrl(this.value, sortSel.value);
-        });
-        sortSel.addEventListener('change', function () {
-            window.location.href = buildUrl(catSel.value, this.value);
+        // Sort dropdown preserves all current params
+        document.getElementById('sort-sel').addEventListener('change', function () {
+            var params = new URLSearchParams(window.location.search);
+            if (this.value) params.set('sort', this.value);
+            else params.delete('sort');
+            window.location.href = '/bidder/listings?' + params.toString();
         });
     </script>
 </body>

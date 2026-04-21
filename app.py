@@ -273,6 +273,18 @@ def logout():
     return redirect("/login")
 
 
+@app.route("/dashboard")
+def dashboard():
+    role = session.get("role")
+    if role == "seller":
+        return redirect("/seller")
+    elif role == "buyer":
+        return redirect("/bidder")
+    elif role == "helpdesk":
+        return redirect("/helpdesk")
+    return redirect("/login")
+
+
 @app.route("/seller")
 def seller():
     guard = role_required("seller")

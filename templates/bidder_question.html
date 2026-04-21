@@ -6,7 +6,7 @@
 </head>
 <body>
     <nav class="first-navbar">
-        <img src="{{ url_for('static', filename='logo.svg') }}" alt="NittanyAuction" height="36">
+        <a href="/dashboard"><img src="{{ url_for('static', filename='logo.svg') }}" alt="NittanyAuction" height="36"></a>
         <div class="nav-links">
             <span class="nav-user">{{ email }}</span>
             <a href="/bidder/listings/{{ listing['listing_id'] }}">← Listing</a>

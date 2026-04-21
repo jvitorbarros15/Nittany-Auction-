@@ -32,7 +32,11 @@
                 <div class="bid-box-amount">
                     {% if top_bid %}${{ "%.2f"|format(top_bid) }}{% else %}No bids yet{% endif %}
                 </div>
-                <div class="bid-box-sub">Reserve price: ${{ "%.2f"|format(listing['reserve_price']) }}</div>
+                <div class="bid-box-sub">{{ listing['max_bids'] - bid_count }} bid{{ 's' if (listing['max_bids'] - bid_count) != 1 }} remaining</div>
+                <div class="bid-box-sub" style="margin-top:6px; font-weight:600;">
+                    🔨 {{ remaining }} bid{{ 's' if remaining != 1 }} remaining
+                    <span style="color:#ccc;"> · {{ bid_count }} / {{ listing['max_bids'] }} placed</span>
+                </div>
             </div>
 
             {% if is_last_bidder %}
@@ -50,7 +54,8 @@
                            step="0.01" min="{{ '%.2f'|format(min_bid) }}"
                            placeholder="{{ '%.2f'|format(min_bid) }}" required autofocus>
                     <span style="font-size:12px; color:#aaa; margin-top:2px;">
-                        Minimum bid: ${{ "%.2f"|format(min_bid) }}
+                        {% if top_bid %}Minimum: ${{ "%.2f"|format(min_bid) }} (must be at least $1 higher than current bid)
+                        {% else %}No minimum — be the first bidder!{% endif %}
                     </span>
                 </div>
                 <div class="form-actions">

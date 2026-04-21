@@ -226,6 +226,7 @@
                             <th>Title</th>
                             <th>Category</th>
                             <th>Reserve</th>
+                            <th>Bids Left at Removal</th>
                             <th>Removal Reason</th>
                             <th>Actions</th>
                         </tr>
@@ -239,6 +240,11 @@
                                 <span class="cat-name">{{ listing['category'] or '—' }}</span>
                             </td>
                             <td>${{ "%.2f"|format(listing['reserve_price']) }}</td>
+                            <td style="text-align:center; color:#374151;">
+                                {% if listing['remaining_bids_at_removal'] is not none %}
+                                    {{ listing['remaining_bids_at_removal'] }}
+                                {% else %}—{% endif %}
+                            </td>
                             <td style="color:#9ca3af; font-size:13px;">{{ listing['removal_reason'] or '—' }}</td>
                             <td>
                                 <a href="/seller/listings/{{ listing['listing_id'] }}/edit" class="btn-secondary" style="font-size:12px; padding:5px 12px;">Edit</a>

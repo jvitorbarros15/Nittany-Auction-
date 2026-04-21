@@ -40,14 +40,16 @@
         <div class="browse-filter-bar">
             <form id="search-form" method="GET" action="/bidder/listings" style="display:contents;">
                 <input type="text" id="search-input" name="q" value="{{ query }}"
-                       placeholder="Search listings…"
-                       style="flex:1; min-width:160px; max-width:280px; padding:9px 14px; border:1.5px solid #e5e7eb; border-radius:10px; font-size:14px; outline:none;"
+                       placeholder="Search title, category, seller…"
+                       style="flex:1; min-width:160px; max-width:240px; padding:9px 14px; border:1.5px solid #e5e7eb; border-radius:10px; font-size:14px; outline:none;"
                        onkeydown="if(event.key==='Enter'){this.form.submit();}">
-                {% if query %}
+                <input type="number" name="min_price" value="{{ min_price or '' }}" placeholder="Min $"
+                       step="0.01" min="0"
+                       style="width:80px; padding:9px 10px; border:1.5px solid #e5e7eb; border-radius:10px; font-size:14px; outline:none;">
+                <input type="number" name="max_price" value="{{ max_price or '' }}" placeholder="Max $"
+                       step="0.01" min="0"
+                       style="width:80px; padding:9px 10px; border:1.5px solid #e5e7eb; border-radius:10px; font-size:14px; outline:none;">
                 <button type="submit" style="padding:9px 14px; background:#4f46e5; color:#fff; border:none; border-radius:10px; font-size:13px; cursor:pointer;">Search</button>
-                {% else %}
-                <button type="submit" style="padding:9px 14px; background:#4f46e5; color:#fff; border:none; border-radius:10px; font-size:13px; cursor:pointer;">Search</button>
-                {% endif %}
             </form>
 
             <div class="filter-divider"></div>
@@ -76,15 +78,13 @@
             <label for="sort-sel">Sort by</label>
             <select id="sort-sel">
                 <option value=""           {% if not sort %}selected{% endif %}>Default</option>
-                <option value="time_asc"   {% if sort=='time_asc' %}selected{% endif %}>Ending Soon</option>
-                <option value="time_desc"  {% if sort=='time_desc' %}selected{% endif %}>Ending Last</option>
                 <option value="price_asc"  {% if sort=='price_asc' %}selected{% endif %}>Price: Low → High</option>
                 <option value="price_desc" {% if sort=='price_desc' %}selected{% endif %}>Price: High → Low</option>
                 <option value="bids_desc"  {% if sort=='bids_desc' %}selected{% endif %}>Most Bids</option>
                 <option value="bids_asc"   {% if sort=='bids_asc' %}selected{% endif %}>Fewest Bids</option>
             </select>
 
-            {% if selected_category or selected_parent or sort or query %}
+            {% if selected_category or selected_parent or sort or query or min_price or max_price %}
             <a href="/bidder/listings" class="btn-secondary" style="font-size:13px; padding:9px 16px; white-space:nowrap;">✕ Clear</a>
             {% endif %}
             <span class="result-count">{{ listings|length }} result{{ 's' if listings|length != 1 }}</span>
@@ -109,8 +109,12 @@
                     <div class="listing-card-title">{{ listing['title'] }}</div>
 
                     <div class="listing-card-price">
-                        ${{ "%.2f"|format(listing['current_bid'] or listing['reserve_price']) }}
-                        <span>{{ 'current bid' if listing['current_bid'] else 'reserve' }}</span>
+                        {% if listing['current_bid'] %}
+                        ${{ "%.2f"|format(listing['current_bid']) }}
+                        <span>current bid</span>
+                        {% else %}
+                        <span style="color:#9ca3af; font-size:14px;">No bids yet</span>
+                        {% endif %}
                     </div>
 
                     <div class="listing-card-footer">

@@ -38,7 +38,6 @@
                 <div class="listing-tags" style="margin-bottom:20px;">
                     {% if listing['condition'] %}<span class="tag">{{ listing['condition'] }}</span>{% endif %}
                     {% if listing['category_name'] %}<span class="tag">{{ listing['category_name'] }}</span>{% endif %}
-                    <span class="tag">Reserve: ${{ "%.2f"|format(listing['reserve_price']) }}</span>
                     {% if listing['promoted'] %}<span class="tag" style="background:#fff8e1; color:#c47f00; border:1px solid #ffe082;">★ Promoted</span>{% endif %}
                 </div>
 
@@ -47,6 +46,13 @@
                     <div>
                         <div class="listing-seller-label">Sold by</div>
                         <div class="listing-seller-email">{{ listing['seller_email'] }}</div>
+                        {% if seller_rating and seller_rating['cnt'] > 0 %}
+                        <div style="font-size:12px; color:#e08311; margin-top:2px;">
+                            ★ {{ seller_rating['avg'] }} <span style="color:#9ca3af;">({{ seller_rating['cnt'] }} rating{{ 's' if seller_rating['cnt'] != 1 }})</span>
+                        </div>
+                        {% else %}
+                        <div style="font-size:12px; color:#9ca3af; margin-top:2px;">No ratings yet</div>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -58,7 +64,7 @@
 
                 <!-- Auction ended state (main column) -->
                 {% if auction_ended %}
-                    {% if is_winner and not transaction %}
+                    {% if is_winner and not transaction and listing['status'] == 'ended' %}
                     <div class="winner-box">
                         <h3>You won this auction!</h3>
                         <p>Winning bid: <strong>${{ "%.2f"|format(top_bid) }}</strong> — Complete your payment to claim the item.</p>
@@ -68,9 +74,13 @@
                         <h3>Purchase complete</h3>
                         <p>You paid ${{ "%.2f"|format(top_bid) }} for this item.</p>
                     </div>
+                    {% elif listing['status'] == 'inactive' and listing['removal_reason'] and 'reserve' in listing['removal_reason'] %}
+                    <div class="auction-ended-box">
+                        This auction ended without a winner — the reserve price was not met.
+                    </div>
                     {% else %}
                     <div class="auction-ended-box">
-                        Auction ended {{ listing['auction_stop_time'].replace('T', ' ') }}. You did not win.
+                        This auction has ended. You did not win.
                     </div>
                     {% endif %}
                 {% endif %}
@@ -112,15 +122,18 @@
                 <div class="bid-panel">
                     {% if not auction_ended %}
                     <div class="bid-panel-timer">
-                        <span>Time left:</span>
-                        <strong class="bid-timer" data-end="{{ listing['auction_stop_time'] }}">⏱ …</strong>
+                        <span>Bids remaining:</span>
+                        <strong>{{ listing['max_bids'] - bid_count }}</strong>
+                        <span style="font-size:12px; color:#9ca3af;">/ {{ listing['max_bids'] }} max</span>
                     </div>
                     {% endif %}
 
-                    <div class="bid-panel-label">{{ 'Current Bid' if top_bid else 'Starting Price' }}</div>
-                    <div class="bid-panel-price">
-                        ${{ "%.2f"|format(top_bid or listing['reserve_price']) }}
-                    </div>
+                    <div class="bid-panel-label">{{ 'Current Bid' if top_bid else 'No Bids Yet' }}</div>
+                    {% if top_bid %}
+                    <div class="bid-panel-price">${{ "%.2f"|format(top_bid) }}</div>
+                    {% else %}
+                    <div class="bid-panel-price" style="font-size:18px; color:#9ca3af;">—</div>
+                    {% endif %}
 
                     {% if my_bid %}
                     <div class="bid-panel-sub">
@@ -139,7 +152,7 @@
                         {% if not auction_ended %}
                             <a href="/bidder/listings/{{ listing['listing_id'] }}/bid" class="btn-primary">Place a Bid</a>
                             <a href="/bidder/listings/{{ listing['listing_id'] }}/question" class="btn-secondary">Ask a Question</a>
-                        {% elif is_winner and not transaction %}
+                        {% elif is_winner and not transaction and listing['status'] == 'ended' %}
                             <a href="/bidder/listings/{{ listing['listing_id'] }}/pay" class="btn-primary">Pay Now</a>
                         {% elif is_winner and transaction and not rated %}
                             <a href="/bidder/listings/{{ listing['listing_id'] }}/rate" class="btn-secondary">Rate Seller</a>

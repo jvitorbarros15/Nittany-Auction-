@@ -9,7 +9,8 @@
         <img src="{{ url_for('static', filename='logo.svg') }}" alt="NittanyAuction" height="36">
         <div class="nav-links">
             <span class="nav-user">{{ email }}</span>
-            <a href="/bidder/listings">Browse</a>
+            <a href="/bidder/browse">Categories</a>
+            <a href="/bidder/listings">Search</a>
             <a href="/bidder/bids">My Bids</a>
             <a href="/bidder/watchlist">Watchlist</a>
             <a href="/bidder/profile">Profile</a>
@@ -35,10 +36,15 @@
         {% endwith %}
 
         <div class="dashboard-cards">
+            <a href="/bidder/browse" class="dashboard-card">
+                <div class="card-icon-wrap" style="background:#f0f4ff;">🗂️</div>
+                <div class="card-label">Browse Categories</div>
+                <div class="card-desc">Navigate the category hierarchy</div>
+            </a>
             <a href="/bidder/listings" class="dashboard-card">
-                <div class="card-icon-wrap" style="background:#f0f4ff;">🔍</div>
-                <div class="card-label">Browse Listings</div>
-                <div class="card-desc">Find items to bid on by category</div>
+                <div class="card-icon-wrap" style="background:#f0fff4;">🔍</div>
+                <div class="card-label">Search Listings</div>
+                <div class="card-desc">Search by keyword or price range</div>
             </a>
             <a href="/bidder/profile" class="dashboard-card">
                 <div class="card-icon-wrap" style="background:#f0fff4;">👤</div>
@@ -66,6 +72,21 @@
                 <div class="card-desc">Submit an application to HelpDesk</div>
             </a>
         </div>
+
+        {% if notifications %}
+        <div class="alert-section">
+            <div class="alert-section-head">
+                <span style="font-size:16px;">🔔</span>
+                <h3>Notifications</h3>
+            </div>
+            {% for n in notifications %}
+            <div class="alert-item">
+                <span>{{ n['message'] }}</span>
+                <div class="alert-item-right" style="font-size:12px; color:#9ca3af;">{{ n['created_at'][:16].replace('T',' ') }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
 
         {% if won_auctions %}
         <div class="alert-section">

@@ -103,6 +103,14 @@ def init_db():
             added_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
             UNIQUE(bidder_email, listing_id)
         );
+        CREATE TABLE IF NOT EXISTS notifications (
+            notif_id   INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_email TEXT NOT NULL,
+            listing_id INTEGER,
+            message    TEXT NOT NULL,
+            is_read    INTEGER DEFAULT 0,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
     """)
 
     existing_cols = {row[1] for row in conn.execute("PRAGMA table_info(listings)").fetchall()}
@@ -112,6 +120,8 @@ def init_db():
         conn.execute("ALTER TABLE listings ADD COLUMN promoted_at DATETIME")
     if "promotion_fee" not in existing_cols:
         conn.execute("ALTER TABLE listings ADD COLUMN promotion_fee REAL")
+    if "remaining_bids_at_removal" not in existing_cols:
+        conn.execute("ALTER TABLE listings ADD COLUMN remaining_bids_at_removal INTEGER")
     conn.commit()
     conn.close()
 
@@ -119,62 +129,90 @@ def init_db():
 init_db()
 
 
+def close_auction(conn, listing_id):
+    """Called when bid_count reaches max_bids. Determines outcome and notifies all bidders."""
+    listing = conn.execute("SELECT * FROM listings WHERE listing_id = ?", (listing_id,)).fetchone()
+    top_row  = conn.execute(
+        "SELECT bidder_email, MAX(bid_amount) AS amount FROM bids WHERE listing_id = ?", (listing_id,)
+    ).fetchone()
+    bidders  = conn.execute(
+        "SELECT DISTINCT bidder_email FROM bids WHERE listing_id = ?", (listing_id,)
+    ).fetchall()
+
+    top_bid    = top_row["amount"]   if top_row  else None
+    winner     = top_row["bidder_email"] if top_row else None
+    title      = listing["title"]
+
+    if top_bid is not None and top_bid >= listing["reserve_price"]:
+        conn.execute("UPDATE listings SET status = 'ended' WHERE listing_id = ?", (listing_id,))
+        for b in bidders:
+            if b["bidder_email"] == winner:
+                msg = f"You won the auction for \"{title}\" with a bid of ${top_bid:.2f}! Please complete payment."
+            else:
+                msg = f"Auction for \"{title}\" has ended. The winning bid was ${top_bid:.2f}."
+            conn.execute(
+                "INSERT INTO notifications (user_email, listing_id, message) VALUES (?, ?, ?)",
+                (b["bidder_email"], listing_id, msg)
+            )
+    else:
+        conn.execute(
+            "UPDATE listings SET status = 'inactive', removal_reason = 'Auction ended — reserve price not met' WHERE listing_id = ?",
+            (listing_id,)
+        )
+        for b in bidders:
+            conn.execute(
+                "INSERT INTO notifications (user_email, listing_id, message) VALUES (?, ?, ?)",
+                (b["bidder_email"], listing_id,
+                 f"Auction for \"{title}\" ended without a winner — the reserve price was not met.")
+            )
+
+
 @app.route("/")
 def homepage():
-    now = datetime.now().strftime("%Y-%m-%dT%H:%M")
     with sqlite3.connect("nittanyauction.db") as conn:
         conn.row_factory = sqlite3.Row
 
-        # Live auctions carousel — most bids, active
         carousel_listings = conn.execute("""
             SELECT l.listing_id, l.title, l.seller_email, l.reserve_price,
-                   l.auction_stop_time, l.promoted,
+                   l.max_bids, l.promoted,
                    c.category_name, c.parent_category,
                    (SELECT MAX(bid_amount) FROM bids WHERE listing_id = l.listing_id) AS current_bid,
                    (SELECT COUNT(*)       FROM bids WHERE listing_id = l.listing_id) AS bid_count
             FROM listings l
             LEFT JOIN categories c ON l.category_id = c.category_id
-            WHERE l.status = 'active' AND l.auction_stop_time > ?
+            WHERE l.status = 'active'
             ORDER BY bid_count DESC, l.promoted DESC
             LIMIT 10
-        """, (now,)).fetchall()
+        """).fetchall()
 
-        # Featured grid — promoted first, then highest current bid, limit 6
         featured_listings = conn.execute("""
             SELECT l.listing_id, l.title, l.seller_email, l.reserve_price,
-                   l.auction_stop_time, l.condition, l.promoted,
+                   l.max_bids, l.condition, l.promoted,
                    c.category_name,
                    (SELECT MAX(bid_amount) FROM bids WHERE listing_id = l.listing_id) AS current_bid,
                    (SELECT COUNT(*)       FROM bids WHERE listing_id = l.listing_id) AS bid_count
             FROM listings l
             LEFT JOIN categories c ON l.category_id = c.category_id
-            WHERE l.status = 'active' AND l.auction_stop_time > ?
+            WHERE l.status = 'active'
             ORDER BY l.promoted DESC, current_bid DESC, l.reserve_price DESC
             LIMIT 6
-        """, (now,)).fetchall()
+        """).fetchall()
 
-        # Seller spotlight — sellers with ratings, ordered by avg stars
         top_sellers = conn.execute("""
             SELECT r.seller_email,
                    ROUND(AVG(r.stars), 1) AS avg_stars,
                    COUNT(r.rating_id)     AS rating_count,
                    (SELECT COUNT(*) FROM listings
-                    WHERE seller_email = r.seller_email AND status = 'active'
-                      AND auction_stop_time > ?) AS active_count
+                    WHERE seller_email = r.seller_email AND status = 'active') AS active_count
             FROM ratings r
             GROUP BY r.seller_email
             ORDER BY avg_stars DESC, rating_count DESC
             LIMIT 4
-        """, (now,)).fetchall()
+        """).fetchall()
 
-        # Stats
-        live_count = conn.execute(
-            "SELECT COUNT(*) FROM listings WHERE status='active' AND auction_stop_time > ?", (now,)
-        ).fetchone()[0]
-        seller_count = conn.execute(
-            "SELECT COUNT(DISTINCT seller_email) FROM listings WHERE status='active' AND auction_stop_time > ?", (now,)
-        ).fetchone()[0]
-        bid_count = conn.execute("SELECT COUNT(*) FROM bids").fetchone()[0]
+        live_count   = conn.execute("SELECT COUNT(*) FROM listings WHERE status='active'").fetchone()[0]
+        seller_count = conn.execute("SELECT COUNT(DISTINCT seller_email) FROM listings WHERE status='active'").fetchone()[0]
+        bid_count    = conn.execute("SELECT COUNT(*) FROM bids").fetchone()[0]
 
     return render_template("homepage.html",
                            carousel_listings=carousel_listings,
@@ -369,13 +407,13 @@ def seller_listing_remove(listing_id):
 
     if request.method == "POST":
         removal_reason = request.form["removal_reason"]
+        remaining_bids = max(0, listing["max_bids"] - bid_count)
 
-        # mark as inactive instead of deleting it so we keep the history
         cursor.execute("""
-            UPDATE listings 
-            SET status = 'inactive', removal_reason = ?
+            UPDATE listings
+            SET status = 'inactive', removal_reason = ?, remaining_bids_at_removal = ?
             WHERE listing_id = ?
-        """, (removal_reason, listing_id))
+        """, (removal_reason, remaining_bids, listing_id))
         connection.commit()
         connection.close()
 
@@ -475,12 +513,12 @@ def bidder():
             SELECT l.listing_id, l.title,
                    (SELECT MAX(bid_amount) FROM bids WHERE listing_id = l.listing_id) AS winning_bid
             FROM listings l
-            WHERE l.status = 'active' AND l.auction_stop_time < ?
+            WHERE l.status = 'ended'
               AND NOT EXISTS (SELECT 1 FROM transactions WHERE listing_id = l.listing_id)
               AND (SELECT bidder_email FROM bids
                    WHERE listing_id = l.listing_id
                    ORDER BY bid_amount DESC LIMIT 1) = ?
-        """, (now, email)).fetchall()
+        """, (email,)).fetchall()
 
         pending_ratings = conn.execute("""
             SELECT l.listing_id, l.title, t.amount
@@ -493,10 +531,16 @@ def bidder():
               )
         """, (email, email)).fetchall()
 
+        notifications = conn.execute("""
+            SELECT * FROM notifications WHERE user_email = ? ORDER BY created_at DESC LIMIT 20
+        """, (email,)).fetchall()
+        conn.execute("UPDATE notifications SET is_read = 1 WHERE user_email = ?", (email,))
+
     return render_template("bidder_welcome.html",
                            email=email,
                            won_auctions=won_auctions,
-                           pending_ratings=pending_ratings)
+                           pending_ratings=pending_ratings,
+                           notifications=notifications)
 
 
 @app.route("/bidder/bids")
@@ -537,8 +581,8 @@ def bidder_bids():
             ORDER BY q.asked_at DESC
         """, (email,)).fetchall()
 
-    active_bids = [r for r in bids if r["status"] == "active" and r["auction_stop_time"] > now]
-    ended_bids  = [r for r in bids if r["status"] != "active" or r["auction_stop_time"] <= now]
+    active_bids = [r for r in bids if r["status"] == "active"]
+    ended_bids  = [r for r in bids if r["status"] != "active"]
 
     return render_template("bidder_bids.html",
                            email=email,
@@ -642,21 +686,17 @@ def bidder_listings():
     parent_category = request.args.get("parent_category", "").strip()
     sort            = request.args.get("sort", "").strip()
     query           = request.args.get("q", "").strip()
-    now = datetime.now().strftime("%Y-%m-%dT%H:%M")
+    min_price       = request.args.get("min_price", type=float)
+    max_price       = request.args.get("max_price", type=float)
 
     sort_options = {
-        "time_asc":   "l.auction_stop_time ASC",
-        "time_desc":  "l.auction_stop_time DESC",
         "price_asc":  "COALESCE(current_bid, l.reserve_price) ASC",
         "price_desc": "COALESCE(current_bid, l.reserve_price) DESC",
         "bids_asc":   "bid_count ASC",
         "bids_desc":  "bid_count DESC",
     }
     order_clause = sort_options.get(sort)
-    if order_clause:
-        order_sql = f"ORDER BY l.promoted DESC, {order_clause}"
-    else:
-        order_sql = "ORDER BY l.promoted DESC, l.auction_stop_time ASC"
+    order_sql = f"ORDER BY l.promoted DESC, {order_clause}" if order_clause else "ORDER BY l.promoted DESC, l.reserve_price ASC"
 
     with sqlite3.connect("nittanyauction.db") as conn:
         conn.row_factory = sqlite3.Row
@@ -676,14 +716,20 @@ def bidder_listings():
                    (SELECT COUNT(*) FROM bids WHERE listing_id = l.listing_id) AS bid_count
             FROM listings l
             LEFT JOIN categories c ON l.category_id = c.category_id
-            WHERE l.status = 'active' AND l.auction_stop_time > ?
+            WHERE l.status = 'active'
         """
 
-        params = [now]
+        params = []
         filters = ""
         if query:
-            filters += " AND (l.title LIKE ? OR l.description LIKE ? OR c.category_name LIKE ?)"
-            params.extend([f"%{query}%", f"%{query}%", f"%{query}%"])
+            filters += " AND (l.title LIKE ? OR l.description LIKE ? OR c.category_name LIKE ? OR l.seller_email LIKE ?)"
+            params.extend([f"%{query}%", f"%{query}%", f"%{query}%", f"%{query}%"])
+        if min_price is not None:
+            filters += " AND COALESCE((SELECT MAX(bid_amount) FROM bids WHERE listing_id = l.listing_id), l.reserve_price) >= ?"
+            params.append(min_price)
+        if max_price is not None:
+            filters += " AND COALESCE((SELECT MAX(bid_amount) FROM bids WHERE listing_id = l.listing_id), l.reserve_price) <= ?"
+            params.append(max_price)
         if category_id:
             filters += " AND l.category_id = ?"
             params.append(category_id)
@@ -700,7 +746,72 @@ def bidder_listings():
                            selected_category=category_id,
                            selected_parent=parent_category,
                            sort=sort,
-                           query=query)
+                           query=query,
+                           min_price=min_price,
+                           max_price=max_price)
+
+
+@app.route("/bidder/browse")
+@app.route("/bidder/browse/<int:category_id>")
+def bidder_browse(category_id=None):
+    guard = role_required("buyer")
+    if guard:
+        return guard
+
+    with sqlite3.connect("nittanyauction.db") as conn:
+        conn.row_factory = sqlite3.Row
+
+        if category_id is None:
+            # Root level — show top-level categories
+            current = None
+            breadcrumbs = []
+            subcategories = conn.execute(
+                "SELECT * FROM categories WHERE parent_category = 'Root' ORDER BY category_name"
+            ).fetchall()
+            listings = []
+        else:
+            current = conn.execute(
+                "SELECT * FROM categories WHERE category_id = ?", (category_id,)
+            ).fetchone()
+            if not current:
+                flash("Category not found.", "error")
+                return redirect("/bidder/browse")
+
+            # Build breadcrumb by walking up
+            breadcrumbs = []
+            node = current
+            while node and node["parent_category"] and node["parent_category"] != "Root":
+                parent = conn.execute(
+                    "SELECT * FROM categories WHERE category_name = ?", (node["parent_category"],)
+                ).fetchone()
+                if parent:
+                    breadcrumbs.insert(0, parent)
+                    node = parent
+                else:
+                    break
+
+            # Subcategories of current
+            subcategories = conn.execute(
+                "SELECT * FROM categories WHERE parent_category = ? ORDER BY category_name",
+                (current["category_name"],)
+            ).fetchall()
+
+            # Active listings in this category
+            listings = conn.execute("""
+                SELECT l.listing_id, l.title, l.max_bids, l.promoted, l.seller_email,
+                       (SELECT MAX(bid_amount) FROM bids WHERE listing_id = l.listing_id) AS current_bid,
+                       (SELECT COUNT(*) FROM bids WHERE listing_id = l.listing_id) AS bid_count
+                FROM listings l
+                WHERE l.category_id = ? AND l.status = 'active'
+                ORDER BY l.promoted DESC, l.listing_id DESC
+            """, (category_id,)).fetchall()
+
+    return render_template("bidder_browse.html",
+                           email=session["email"],
+                           current=current,
+                           breadcrumbs=breadcrumbs,
+                           subcategories=subcategories,
+                           listings=listings)
 
 
 @app.route("/bidder/listings/<int:listing_id>")
@@ -719,12 +830,16 @@ def bidder_listing_view(listing_id):
             SELECT l.*, c.category_name
             FROM listings l
             LEFT JOIN categories c ON l.category_id = c.category_id
-            WHERE l.listing_id = ? AND l.status = 'active'
+            WHERE l.listing_id = ?
         """, (listing_id,)).fetchone()
 
         if not listing:
-            flash("Listing not found or no longer available.", "error")
+            flash("Listing not found.", "error")
             return redirect("/bidder/listings")
+
+        bid_count = conn.execute(
+            "SELECT COUNT(*) FROM bids WHERE listing_id = ?", (listing_id,)
+        ).fetchone()[0]
 
         top_bid = conn.execute(
             "SELECT MAX(bid_amount) FROM bids WHERE listing_id = ?", (listing_id,)
@@ -740,8 +855,13 @@ def bidder_listing_view(listing_id):
             (listing_id,)
         ).fetchone()
 
-        auction_ended = listing["auction_stop_time"] < now
+        auction_ended = listing["status"] in ("ended", "sold", "inactive")
         is_winner = bool(winner_row and winner_row["bidder_email"] == email)
+
+        seller_rating = conn.execute(
+            "SELECT ROUND(AVG(stars), 1) AS avg, COUNT(*) AS cnt FROM ratings WHERE seller_email = ?",
+            (listing["seller_email"],)
+        ).fetchone()
 
         transaction = conn.execute(
             "SELECT 1 FROM transactions WHERE listing_id = ? AND bidder_email = ?",
@@ -771,6 +891,7 @@ def bidder_listing_view(listing_id):
     return render_template("bidder_listing_view.html",
                            email=email,
                            listing=listing,
+                           bid_count=bid_count,
                            top_bid=top_bid,
                            my_bid=my_bid,
                            is_winner=is_winner,
@@ -779,7 +900,8 @@ def bidder_listing_view(listing_id):
                            rated=rated,
                            my_questions=my_questions,
                            all_qa=all_qa,
-                           in_watchlist=in_watchlist)
+                           in_watchlist=in_watchlist,
+                           seller_rating=seller_rating)
 
 
 @app.route("/bidder/listings/<int:listing_id>/bid", methods=["GET", "POST"])
@@ -797,7 +919,11 @@ def bidder_bid(listing_id):
             "SELECT * FROM listings WHERE listing_id = ? AND status = 'active'", (listing_id,)
         ).fetchone()
 
-        if not listing or listing["auction_stop_time"] < now:
+        bid_count = conn.execute(
+            "SELECT COUNT(*) FROM bids WHERE listing_id = ?", (listing_id,)
+        ).fetchone()[0] if listing else 0
+
+        if not listing or bid_count >= listing["max_bids"]:
             flash("This auction is not available for bidding.", "error")
             return redirect(f"/bidder/listings/{listing_id}")
 
@@ -821,28 +947,39 @@ def bidder_bid(listing_id):
                 flash("You already hold the highest bid. Another bidder must bid before you can bid again.", "error")
                 return redirect(f"/bidder/listings/{listing_id}/bid")
 
-            if bid_amount < listing["reserve_price"]:
-                flash(f"Bid must be at least the reserve price of ${listing['reserve_price']:.2f}.", "error")
+            if bid_amount <= 0:
+                flash("Bid must be a positive amount.", "error")
                 return redirect(f"/bidder/listings/{listing_id}/bid")
 
-            if top_bid is not None and bid_amount <= top_bid:
-                flash(f"Bid must be higher than the current highest bid of ${top_bid:.2f}.", "error")
+            min_increment = (top_bid or 0) + 1.00
+            if top_bid is not None and bid_amount < min_increment:
+                flash(f"Bid must be at least $1 higher than the current highest bid (minimum: ${min_increment:.2f}).", "error")
                 return redirect(f"/bidder/listings/{listing_id}/bid")
 
             conn.execute(
                 "INSERT INTO bids (listing_id, bidder_email, bid_amount) VALUES (?, ?, ?)",
                 (listing_id, email, bid_amount)
             )
-            flash(f"Bid of ${bid_amount:.2f} placed successfully!", "success")
+
+            new_count = bid_count + 1
+            remaining  = listing["max_bids"] - new_count
+            if new_count >= listing["max_bids"]:
+                close_auction(conn, listing_id)
+                flash(f"Bid of ${bid_amount:.2f} placed — auction is now closed! Check your notifications for the result.", "success")
+            else:
+                flash(f"Bid of ${bid_amount:.2f} placed! {remaining} bid{'s' if remaining != 1 else ''} remaining.", "success")
             return redirect(f"/bidder/listings/{listing_id}")
 
-        min_bid = max(listing["reserve_price"], (top_bid or 0) + 0.01)
+        remaining = listing["max_bids"] - bid_count
+        min_bid = (top_bid + 1.00) if top_bid is not None else 0.01
 
     return render_template("bidder_bid.html",
                            email=email,
                            listing=listing,
                            top_bid=top_bid,
                            min_bid=min_bid,
+                           bid_count=bid_count,
+                           remaining=remaining,
                            is_last_bidder=is_last_bidder)
 
 
@@ -893,11 +1030,11 @@ def bidder_pay(listing_id):
         conn.row_factory = sqlite3.Row
 
         listing = conn.execute(
-            "SELECT * FROM listings WHERE listing_id = ? AND status = 'active'", (listing_id,)
+            "SELECT * FROM listings WHERE listing_id = ? AND status = 'ended'", (listing_id,)
         ).fetchone()
 
-        if not listing or listing["auction_stop_time"] >= now:
-            flash("This auction has not ended yet.", "error")
+        if not listing:
+            flash("This auction is not available for payment.", "error")
             return redirect("/bidder")
 
         winner_row = conn.execute(
@@ -1291,7 +1428,7 @@ def bidder_watchlist():
     enriched = []
     for row in items:
         d = dict(row)
-        d["is_active"] = (d["status"] == "active" and d["auction_stop_time"] > now)
+        d["is_active"] = (d["status"] == "active")
         enriched.append(d)
 
     return render_template("bidder_watchlist.html", email=email, items=enriched)

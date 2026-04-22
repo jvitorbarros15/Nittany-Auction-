@@ -69,10 +69,16 @@
                         <h3>You won this auction!</h3>
                         <p>Winning bid: <strong>${{ "%.2f"|format(top_bid) }}</strong> — Complete your payment to claim the item.</p>
                     </div>
-                    {% elif is_winner and transaction %}
+                    {% elif is_winner and transaction and not rated %}
                     <div class="winner-box">
                         <h3>Purchase complete</h3>
                         <p>You paid ${{ "%.2f"|format(top_bid) }} for this item.</p>
+                        <p style="margin-top:12px;">How was your experience? <a href="/bidder/listings/{{ listing['listing_id'] }}/rate" style="color:#4f46e5; font-weight:700;">Rate this seller →</a></p>
+                    </div>
+                    {% elif is_winner and transaction and rated %}
+                    <div class="winner-box">
+                        <h3>Purchase complete</h3>
+                        <p>You paid ${{ "%.2f"|format(top_bid) }} for this item. Thanks for your rating!</p>
                     </div>
                     {% elif listing['status'] == 'inactive' and listing['removal_reason'] and 'reserve' in listing['removal_reason'] %}
                     <div class="auction-ended-box">
@@ -155,7 +161,7 @@
                         {% elif is_winner and not transaction and listing['status'] == 'ended' %}
                             <a href="/bidder/listings/{{ listing['listing_id'] }}/pay" class="btn-primary">Pay Now</a>
                         {% elif is_winner and transaction and not rated %}
-                            <a href="/bidder/listings/{{ listing['listing_id'] }}/rate" class="btn-secondary">Rate Seller</a>
+                            <a href="/bidder/listings/{{ listing['listing_id'] }}/rate" class="btn-primary">⭐ Rate Seller</a>
                         {% endif %}
                         <form method="POST" action="/bidder/watchlist" style="margin:0;">
                             <input type="hidden" name="action" value="{{ 'remove' if in_watchlist else 'add' }}">

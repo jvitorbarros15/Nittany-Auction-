@@ -1162,8 +1162,8 @@ def bidder_pay(listing_id):
                 (listing_id, email, amount)
             )
             conn.execute("UPDATE listings SET status = 'sold' WHERE listing_id = ?", (listing_id,))
-            flash(f"Payment of ${amount:.2f} completed. Thank you!", "success")
-            return redirect("/bidder")
+            flash(f"Payment of ${amount:.2f} completed. Rate your seller below!", "success")
+            return redirect(f"/bidder/listings/{listing_id}")
 
     return render_template("bidder_payment.html",
                            email=email,

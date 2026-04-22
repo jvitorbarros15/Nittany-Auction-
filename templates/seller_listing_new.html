@@ -60,6 +60,11 @@
                     <input type="number" id="reserve_price" name="reserve_price" step="0.01" min="0.01" placeholder="0.00" required>
                 </div>
 
+                <div class="form-group">
+                    <label for="max_bids">Max Number of Bids</label>
+                    <input type="number" id="max_bids" name="max_bids" min="1" step="1" placeholder="e.g. 5" required>
+                </div>
+
                 <!-- Auction stop time is required so the system knows when to close the auction -->
                 <div class="form-group">
                     <label for="auction_stop_time">Auction End Date & Time</label>

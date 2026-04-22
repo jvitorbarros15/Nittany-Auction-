@@ -723,6 +723,7 @@ def bidder_profile():
                   phone_number, major, age, annual_income))
 
         flash("Profile updated successfully.", "success")
+
         return redirect("/bidder/profile")
 
     with sqlite3.connect("nittanyauction.db") as conn:

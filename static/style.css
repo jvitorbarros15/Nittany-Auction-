@@ -23,6 +23,17 @@ body {
     box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 
+.first-navbar > a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 0;
+}
+
+.first-navbar img {
+    display: block;
+}
+
 .first-navbar h1 {
     font-size: 20px;
     font-weight: 700;
@@ -2204,4 +2215,317 @@ body {
     height: 28px;
     background: #e0e0ea;
     flex-shrink: 0;
+}
+
+/* ── Simplified homepage layout ── */
+.hp-shell {
+    background: linear-gradient(180deg, #252641 0%, #2d2d4b 100%);
+    min-height: calc(100vh - 68px);
+}
+
+.hp-hero-simple {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 56px 24px 40px;
+    display: grid;
+    grid-template-columns: minmax(320px, 1.05fr) minmax(360px, 1fr);
+    gap: 32px;
+    align-items: start;
+}
+
+.hp-hero-copy {
+    color: white;
+    padding-top: 12px;
+}
+
+.hp-hero-copy .hp-hero-title {
+    margin: 18px 0 18px;
+    font-size: clamp(44px, 6vw, 76px);
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+    max-width: 560px;
+}
+
+.hp-hero-copy .hp-hero-sub {
+    max-width: 520px;
+    margin: 0 0 28px;
+    font-size: 18px;
+    line-height: 1.65;
+    color: rgba(255,255,255,0.78);
+}
+
+.hp-hero-copy .hp-hero-actions {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.hp-hero-copy .hp-hero-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 18px;
+    border-radius: 999px;
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    background: rgba(245, 158, 11, 0.08);
+    color: #f59e0b;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.hp-hero-copy .hp-hero-accent {
+    color: #f59e0b;
+}
+
+.hp-hero-copy .hp-btn-outline {
+    display: inline-block;
+    padding: 10px 22px;
+    border-radius: 7px;
+    border: 1px solid rgba(255,255,255,0.28);
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.hp-hero-copy .hp-btn-outline:hover {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.45);
+}
+
+.hp-hero-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+.hp-stats-simple,
+.hp-spotlight,
+.hp-how-simple {
+    background: white;
+    border-radius: 22px;
+    box-shadow: 0 16px 48px rgba(15, 23, 42, 0.18);
+}
+
+.hp-stats-simple {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    padding: 26px;
+}
+
+.hp-stats-simple .hp-stat {
+    padding: 8px 10px;
+    border-radius: 16px;
+    background: #f8f8fb;
+}
+
+.hp-stats-simple .hp-stat-number {
+    display: block;
+    font-size: 36px;
+    line-height: 1;
+    font-weight: 800;
+    color: #1e1e2f;
+    margin-bottom: 8px;
+}
+
+.hp-stats-simple .hp-stat-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #6b7280;
+    line-height: 1.4;
+}
+
+.hp-spotlight {
+    padding: 26px;
+}
+
+.hp-spotlight-head {
+    margin-bottom: 16px;
+}
+
+.hp-spotlight .hp-section-title {
+    margin: 0 0 6px;
+    font-size: 24px;
+    color: #1e1e2f;
+}
+
+.hp-spotlight .hp-section-sub {
+    margin: 0;
+    color: #6b7280;
+}
+
+.hp-sellers-simple {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.hp-seller-row {
+    display: grid;
+    grid-template-columns: 54px 1fr auto;
+    gap: 14px;
+    align-items: center;
+    padding: 16px 18px;
+    border: 1px solid #ececf4;
+    border-radius: 18px;
+    background: #fbfbfd;
+}
+
+.hp-seller-row .hp-seller-avatar {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: #2d2d4b;
+    color: white;
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.hp-seller-row .hp-seller-name {
+    display: block;
+    font-size: 17px;
+    font-weight: 700;
+    color: #1e1e2f;
+    margin-bottom: 4px;
+    word-break: break-word;
+}
+
+.hp-seller-row .hp-seller-stars {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin-bottom: 4px;
+}
+
+.hp-seller-row .hp-seller-meta {
+    display: block;
+    color: #6b7280;
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.hp-seller-row .hp-seller-btn {
+    white-space: nowrap;
+}
+
+.hp-empty-note {
+    color: #9ca3af;
+    font-size: 14px;
+    padding: 8px 0;
+}
+
+.hp-how-simple {
+    max-width: 1200px;
+    margin: 0 auto 32px;
+    padding: 28px 24px 32px;
+}
+
+.hp-how-head {
+    margin-bottom: 22px;
+}
+
+.hp-how-simple .hp-how-title {
+    font-size: 28px;
+    color: #1e1e2f;
+    margin-bottom: 6px;
+}
+
+.hp-how-simple .hp-how-sub {
+    color: #6b7280;
+}
+
+.hp-steps-simple {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.hp-step-simple {
+    padding: 22px;
+    border-radius: 18px;
+    background: #f8f8fb;
+    border: 1px solid #ececf4;
+}
+
+.hp-step-simple .hp-step-num {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    margin-bottom: 14px;
+    background: #fff3e0;
+    color: #e08311;
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.hp-step-simple .hp-step-title {
+    font-size: 18px;
+    color: #1e1e2f;
+    margin-bottom: 8px;
+}
+
+.hp-step-simple .hp-step-desc {
+    color: #6b7280;
+    line-height: 1.6;
+    font-size: 14px;
+}
+
+@media (max-width: 980px) {
+    .hp-hero-simple {
+        grid-template-columns: 1fr;
+    }
+
+    .hp-hero-copy .hp-hero-title {
+        max-width: none;
+    }
+
+    .hp-steps-simple {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    .first-navbar {
+        padding: 14px 18px;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .nav-links {
+        width: 100%;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+    }
+
+    .hp-hero-simple {
+        padding: 32px 16px 24px;
+        gap: 22px;
+    }
+
+    .hp-stats-simple {
+        grid-template-columns: 1fr;
+        padding: 18px;
+    }
+
+    .hp-seller-row {
+        grid-template-columns: 1fr;
+        justify-items: start;
+    }
+
+    .hp-how-simple {
+        margin: 0 16px 24px;
+        padding: 22px 18px;
+    }
+
+    .hp-footer {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
 }

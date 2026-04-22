@@ -58,17 +58,17 @@ Nittany-Auction/
 
 #### 2. Category Hierarchy
 - Full multi-level category tree stored in the `categories` table (`parent_category` field)
-- Root node (`'Root'`) serves as the entry point — no products attached
-- Browsable at `/bidder/browse` — each click dynamically queries the DB for subcategories and listings at that level
+- Root node (`'Root'`) serves as the entry point no products attached
+- Browsable at `/bidder/browse` each click dynamically queries the DB for subcategories and listings at that level
 - Breadcrumb navigation across all levels
-- No hardcoded category structure — fully database-driven
+- No hardcoded category structure fully database-driven
 
 #### 3. Auction Listing Management (Seller)
 - Sellers create listings at `/seller/listings/new` with title, description, condition, category, reserve price, and `max_bids`
 - Listings immediately visible under their category once published
 - Listings page (`/seller/listings`) groups listings by status: **Active**, **Inactive**, **Sold**
 - Edit restricted: sellers can only edit listings with zero bids; a clear message is shown if bids exist
-- Sellers can remove an active listing — removal records:
+- Sellers can remove an active listing removal records:
   - Seller-provided removal reason
   - Remaining bids at time of removal (`max_bids − bid_count`)
 - Filter and sort listings by category, price, bid count
@@ -91,13 +91,13 @@ Nittany-Auction/
 
 #### 6. User Registration
 - New users register at `/register` choosing **Bidder** or **Seller**
-- HelpDesk accounts are internal — not available via public registration
+- HelpDesk accounts are internal not available via public registration
 - Passwords hashed on creation
 
 #### 7. User Profile Update
 - **Bidders** (`/bidder/profile`): update name, address, phone, major, age, annual income; change password
 - **Sellers** (`/seller/profile`): update name, bank routing/account numbers, business info; change password
-- Email (user ID) cannot be changed by the user — must go through HelpDesk
+- Email (user ID) cannot be changed by the user must go through HelpDesk
 - Password change requires current password verification; new password must be ≥ 6 characters
 
 #### 8. Product Search
@@ -105,7 +105,7 @@ Nittany-Auction/
 - Filter by price range (min/max)
 - Filter by category (dropdown or left sidebar)
 - Sort by price or bid count
-- All queries run directly against the SQLite database — no external search libraries
+- All queries run directly against the SQLite database no external search libraries
 
 #### 9. Seller Rating
 - After winning and paying, bidder may rate the seller 1–5 stars at `/bidder/listings/<id>/rate`

@@ -452,6 +452,7 @@ def seller_listing_new():
         condition         = request.form["condition"]
         category_id       = int(request.form["category_id"])
         reserve_price     = float(request.form["reserve_price"])
+        max_bids          = int(request.form["max_bids"])
         auction_stop_time = request.form["auction_stop_time"]
         seller_email      = session["email"]
 
@@ -459,9 +460,9 @@ def seller_listing_new():
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT INTO listings 
-                    (seller_email, title, description, condition, category_id, reserve_price, auction_stop_time, status)
-                VALUES (?, ?, ?, ?, ?, ?, ?, 'active')
-            """, (seller_email, title, description, condition, category_id, reserve_price, auction_stop_time))
+                    (seller_email, title, description, condition, category_id, reserve_price, max_bids, auction_stop_time, status)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active')
+            """, (seller_email, title, description, condition, category_id, reserve_price, max_bids, auction_stop_time))
             conn.commit()
 
         flash("Listing created successfully.", "success")
@@ -723,6 +724,7 @@ def bidder_profile():
                   phone_number, major, age, annual_income))
 
         flash("Profile updated successfully.", "success")
+
         return redirect("/bidder/profile")
 
     with sqlite3.connect("nittanyauction.db") as conn:

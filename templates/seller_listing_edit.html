@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Edit Listing — NittanyAuction</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+
 <body>
     <nav class="first-navbar">
-        <a href="/dashboard"><img src="{{ url_for('static', filename='logo.svg') }}" alt="NittanyAuction" height="36"></a>
+        <a href="/dashboard"><img src="{{ url_for('static', filename='logo.svg') }}" alt="NittanyAuction"
+                height="36"></a>
         <div class="nav-links">
             <span class="nav-user">{{ email }}</span>
             <a href="/seller/listings">My Listings</a>
@@ -16,9 +19,9 @@
 
     <div class="seller-content">
         {% with messages = get_flashed_messages(with_categories=true) %}
-            {% for category, message in messages %}
-                <div class="flash-{{ category }}">{{ message }}</div>
-            {% endfor %}
+        {% for category, message in messages %}
+        <div class="flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
         {% endwith %}
 
         {% if not editable %}
@@ -39,14 +42,16 @@
                 </div>
                 <div class="form-group">
                     <label for="description">Description</label>
-                    <textarea id="description" name="description" rows="4" required>{{ listing['description'] }}</textarea>
+                    <textarea id="description" name="description" rows="4"
+                        required>{{ listing['description'] }}</textarea>
                 </div>
                 <div class="form-group">
                     <label for="condition">Condition</label>
                     <select id="condition" name="condition" required>
                         <option value="" disabled>Select condition</option>
                         {% for opt in ['New', 'Used', 'Refurbished'] %}
-                        <option value="{{ opt }}" {% if listing['condition'] == opt %}selected{% endif %}>{{ opt }}</option>
+                        <option value="{{ opt }}" {% if listing['condition']==opt %}selected{% endif %}>{{ opt }}
+                        </option>
                         {% endfor %}
                     </select>
                 </div>
@@ -56,19 +61,22 @@
                     <select id="category" name="category_id" required>
                         <option value="" disabled>Select category</option>
                         {% for cat in categories %}
-                        <option value="{{ cat['category_id'] }}" {% if listing['category_id'] == cat['category_id'] %}selected{% endif %}>{{ cat['category_name'] }}</option>
+                        <option value="{{ cat['category_id'] }}" {% if listing['category_id']==cat['category_id']
+                            %}selected{% endif %}>{{ cat['category_name'] }}</option>
                         {% endfor %}
                     </select>
                 </div>
 
                 <div class="form-group">
                     <label for="reserve_price">Reserve Price ($)</label>
-                    <input type="number" id="reserve_price" name="reserve_price" step="0.01" min="0.01" value="{{ listing['reserve_price'] }}" required>
+                    <input type="number" id="reserve_price" name="reserve_price" step="0.01" min="0.01"
+                        value="{{ listing['reserve_price'] }}" required>
                 </div>
 
                 <div class="form-group">
                     <label for="auction_stop_time">Auction End Date & Time</label>
-                    <input type="datetime-local" id="auction_stop_time" name="auction_stop_time" value="{{ listing['auction_stop_time'] }}" required>
+                    <input type="datetime-local" id="auction_stop_time" name="auction_stop_time"
+                        value="{{ listing['auction_stop_time'] }}" required>
                 </div>
 
                 <div class="form-actions">
@@ -80,4 +88,5 @@
         {% endif %}
     </div>
 </body>
+
 </html>

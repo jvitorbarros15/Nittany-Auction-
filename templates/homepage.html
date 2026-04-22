@@ -1,267 +1,63 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NittanyAuction — Buy & Sell with Confidence</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+
 <body>
 
-<!-- ── Navbar ── -->
-<nav class="first-navbar">
-    <a href="/dashboard"><img src="{{ url_for('static', filename='logo.svg') }}" alt="NittanyAuction" height="36"></a>
-    <div class="nav-links">
-        <a href="/">Home</a>
-        <a href="/login">Login</a>
-        <a href="/register" class="nav-cta">Register</a>
-    </div>
-</nav>
-
-<!-- ── Hero ── -->
-<section class="hp-hero">
-    <div class="hp-hero-inner">
-        <span class="hp-hero-badge">Live Auctions · Real Deals</span>
-        <h1 class="hp-hero-title">Buy &amp; Sell with<br><span class="hp-hero-accent">Confidence</span></h1>
-        <p class="hp-hero-sub">Join NittanyAuction — a trusted marketplace where buyers bid on real listings from verified sellers.</p>
-        <div class="hp-hero-actions">
-            <a href="/login" class="btn-primary hp-btn-lg">Browse Auctions</a>
-            <a href="/register" class="hp-btn-outline">Create Account</a>
+    <!-- ── Navbar ── -->
+    <nav class="first-navbar">
+        <a href="/"><img src="{{ url_for('static', filename='logo.svg') }}" alt="NittanyAuction"
+                height="36"></a>
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="/login">Login</a>
+            <a href="/register" class="nav-cta">Register</a>
         </div>
-    </div>
-    <div class="hp-hero-visual">
-        <div class="hp-hero-card hp-hc1">
-            <span class="hp-hc-label">Current Bid</span>
-            <span class="hp-hc-price">$142.00</span>
-            <span class="hp-hc-title">Vintage Camera</span>
-            <span class="hp-hc-timer">⏱ 2h 14m left</span>
-        </div>
-        <div class="hp-hero-card hp-hc2">
-            <span class="hp-hc-label">Current Bid</span>
-            <span class="hp-hc-price">$89.50</span>
-            <span class="hp-hc-title">Mechanical Keyboard</span>
-            <span class="hp-hc-timer">⏱ 45m left</span>
-        </div>
-        <div class="hp-hero-card hp-hc3">
-            <span class="hp-hc-label">Starting At</span>
-            <span class="hp-hc-price">$25.00</span>
-            <span class="hp-hc-title">Art Print Set</span>
-            <span class="hp-hc-timer">⏱ 1d 3h left</span>
-        </div>
-    </div>
-</section>
+    </nav>
 
-
-<!-- ── Stats Bar ── -->
-<section class="hp-stats">
-    <div class="hp-stat">
-        <span class="hp-stat-number">{{ live_count }}</span>
-        <span class="hp-stat-label">Live Auctions</span>
-    </div>
-    <div class="hp-stat-divider"></div>
-    <div class="hp-stat">
-        <span class="hp-stat-number">{{ seller_count }}</span>
-        <span class="hp-stat-label">Active Sellers</span>
-    </div>
-    <div class="hp-stat-divider"></div>
-    <div class="hp-stat">
-        <span class="hp-stat-number">{{ "{:,}".format(bid_count) }}</span>
-        <span class="hp-stat-label">Bids Placed</span>
-    </div>
-    <div class="hp-stat-divider"></div>
-    <div class="hp-stat">
-        <span class="hp-stat-number">99%</span>
-        <span class="hp-stat-label">Satisfied Buyers</span>
-    </div>
-</section>
-
-<!-- ── Live Auctions Carousel ── -->
-<section class="hp-section">
-    <div class="hp-section-head">
-        <div>
-            <span class="hp-live-dot"></span>
-            <h2 class="hp-section-title">Live Auctions</h2>
-            <p class="hp-section-sub">Ending soon — place your bid before time runs out</p>
-        </div>
-        <a href="/login" class="btn-secondary hp-see-all">See All →</a>
-    </div>
-
-    <div class="hp-carousel-wrap">
-        <button class="hp-carousel-btn hp-carousel-prev" onclick="slideCarousel('live', -1)">&#8592;</button>
-        <div class="hp-carousel" id="carousel-live">
-
-            {% for listing in carousel_listings %}
-            <div class="hp-auction-card">
-                <div class="hp-ac-top">
-                    <span class="hp-ac-category">
-                        {% if listing['parent_category'] %}{{ listing['parent_category'] }} › {% endif %}{{ listing['category_name'] or 'General' }}
-                    </span>
-                    <span class="hp-ac-timer" data-end="{{ listing['auction_stop_time'] }}">⏱ …</span>
-                    {% if listing['promoted'] %}
-                    <span class="hp-ac-timer" style="background:#fff8e1; color:#8a6d00; margin-left:4px;">★ Promoted</span>
-                    {% endif %}
+    <main class="hp-shell">
+        <section class="hp-hero-simple">
+            <div class="hp-hero-copy">
+                <span class="hp-hero-badge">NittanyAuction</span>
+                <h1 class="hp-hero-title">Buy &amp; Sell with <span class="hp-hero-accent">Confidence</span></h1>
+                <p class="hp-hero-sub">A simple auction marketplace for secure login, category browsing, listing management, bidding, payment, and seller ratings.</p>
+                <div class="hp-hero-actions">
+                    <a href="/login" class="btn-primary hp-btn-lg">Login to Start</a>
+                    <a href="/register" class="hp-btn-outline">Create Account</a>
                 </div>
-                <h3 class="hp-ac-title">{{ listing['title'] }}</h3>
-                <div class="hp-ac-footer">
-                    <div>
-                        <span class="hp-ac-bid-label">{{ 'Current Bid' if listing['current_bid'] else 'Starting At' }}</span>
-                        <span class="hp-ac-bid">${{ "%.2f"|format(listing['current_bid'] or listing['reserve_price']) }}</span>
-                    </div>
-                    <div class="hp-ac-meta">
-                        <span>🔨 {{ listing['bid_count'] }} bid{{ 's' if listing['bid_count'] != 1 }}</span>
-                        <span>· {{ listing['seller_email'] }}</span>
-                    </div>
+            </div>
+        </section>
+
+        <footer class="hp-footer">
+            <div class="hp-footer-inner">
+                <div class="hp-footer-brand">
+                    <img src="{{ url_for('static', filename='logo.svg') }}" alt="NittanyAuction" height="28">
+                    <p>A trusted marketplace for buyers, sellers, and helpdesk staff.</p>
                 </div>
-                <a href="/login" class="btn-primary hp-ac-cta">Bid Now</a>
-            </div>
-            {% else %}
-            <p style="color:#9ca3af; padding:24px;">No active listings right now.</p>
-            {% endfor %}
-
-        </div>
-        <button class="hp-carousel-btn hp-carousel-next" onclick="slideCarousel('live', 1)">&#8594;</button>
-    </div>
-</section>
-
-<!-- ── Featured Listings Grid ── -->
-<section class="hp-section hp-section-alt">
-    <div class="hp-section-head">
-        <div>
-            <h2 class="hp-section-title" style="margin-left:0">Featured Listings</h2>
-            <p class="hp-section-sub" style="margin-left:0">Hand-picked items across all categories</p>
-        </div>
-        <a href="/login" class="btn-secondary hp-see-all">Browse All →</a>
-    </div>
-
-    <div class="hp-grid">
-
-        {% for listing in featured_listings %}
-        <a href="/login" class="hp-grid-card">
-            <div class="hp-gc-top">
-                <span class="hp-ac-category">{{ listing['category_name'] or 'General' }}</span>
-                {% if listing['condition'] %}
-                <span class="hp-gc-condition">{{ listing['condition'] }}</span>
-                {% endif %}
-                {% if listing['promoted'] %}
-                <span class="hp-gc-condition" style="background:#fff8e1; color:#8a6d00; border-color:#ffe082;">★ Promoted</span>
-                {% endif %}
-            </div>
-            <h3 class="hp-gc-title">{{ listing['title'] }}</h3>
-            <div class="hp-gc-price-row">
-                <span class="hp-gc-price">${{ "%.2f"|format(listing['current_bid'] or listing['reserve_price']) }}</span>
-                <span class="hp-gc-bids">{{ listing['bid_count'] }} bid{{ 's' if listing['bid_count'] != 1 }}</span>
-            </div>
-            <span class="hp-gc-end" data-end="{{ listing['auction_stop_time'] }}">⏱ …</span>
-        </a>
-        {% else %}
-        <p style="color:#9ca3af; padding:24px; grid-column: 1/-1;">No featured listings right now.</p>
-        {% endfor %}
-
-    </div>
-</section>
-
-<!-- ── Seller Spotlight ── -->
-<section class="hp-section">
-    <div class="hp-section-head">
-        <div>
-            <h2 class="hp-section-title" style="margin-left:0">Seller Spotlight</h2>
-            <p class="hp-section-sub" style="margin-left:0">Top-rated sellers with active listings</p>
-        </div>
-    </div>
-
-    <div class="hp-sellers">
-
-        {% for seller in top_sellers %}
-        <div class="hp-seller-card">
-            <div class="hp-seller-avatar">{{ seller['seller_email'][:2].upper() }}</div>
-            <div class="hp-seller-info">
-                <span class="hp-seller-name">{{ seller['seller_email'] }}</span>
-                <div class="hp-seller-stars">
-                    {% for i in range(1, 6) %}
-                        <span class="hp-star {% if i <= seller['avg_stars']|int %}filled{% endif %}">★</span>
-                    {% endfor %}
-                    <span class="hp-seller-rating">{{ seller['avg_stars'] }}</span>
+                <div class="hp-footer-links">
+                    <span class="hp-footer-col-title">Platform</span>
+                    <a href="/login">Login</a>
+                    <a href="/register">Register</a>
+                    <a href="/login">Browse Auctions</a>
                 </div>
-                <span class="hp-seller-meta">
-                    {{ seller['active_count'] }} active listing{{ 's' if seller['active_count'] != 1 }}
-                    · {{ seller['rating_count'] }} review{{ 's' if seller['rating_count'] != 1 }}
-                </span>
+                <div class="hp-footer-links">
+                    <span class="hp-footer-col-title">Roles</span>
+                    <a href="/login">Seller Dashboard</a>
+                    <a href="/login">Bidder Dashboard</a>
+                    <a href="/login">HelpDesk Access</a>
+                </div>
             </div>
-            <a href="/login" class="btn-secondary hp-seller-btn">View →</a>
-        </div>
-        {% else %}
-        <p style="color:#9ca3af; padding:24px;">No rated sellers yet.</p>
-        {% endfor %}
-
-    </div>
-</section>
-
-<!-- ── How It Works ── -->
-<section class="hp-how">
-    <div class="hp-how-inner">
-        <h2 class="hp-how-title">How It Works</h2>
-        <p class="hp-how-sub">Three simple steps to start buying or selling</p>
-        <div class="hp-steps">
-            <div class="hp-step">
-                <div class="hp-step-icon">📝</div>
-                <div class="hp-step-num">01</div>
-                <h3 class="hp-step-title">Create an Account</h3>
-                <p class="hp-step-desc">Sign up as a buyer or apply to become a seller. It only takes a minute.</p>
+            <div class="hp-footer-bottom">
+                <span>© 2026 NittanyAuction. All rights reserved.</span>
             </div>
-            <div class="hp-step-arrow">→</div>
-            <div class="hp-step">
-                <div class="hp-step-icon">🔍</div>
-                <div class="hp-step-num">02</div>
-                <h3 class="hp-step-title">Browse & Bid</h3>
-                <p class="hp-step-desc">Explore live auctions across all categories. Place bids before the timer runs out.</p>
-            </div>
-            <div class="hp-step-arrow">→</div>
-            <div class="hp-step">
-                <div class="hp-step-icon">🏆</div>
-                <div class="hp-step-num">03</div>
-                <h3 class="hp-step-title">Win & Pay</h3>
-                <p class="hp-step-desc">Highest bidder wins. Pay securely with your saved card and rate your seller.</p>
-            </div>
-        </div>
-        <div class="hp-how-cta">
-            <a href="/register" class="btn-primary hp-btn-lg">Get Started Free</a>
-        </div>
-    </div>
-</section>
-
-
-
-<!-- ── Footer ── -->
-<footer class="hp-footer">
-    <div class="hp-footer-inner">
-        <div class="hp-footer-brand">
-            <img src="{{ url_for('static', filename='logo.svg') }}" alt="NittanyAuction" height="28">
-            <p>A trusted marketplace for buyers and sellers.</p>
-        </div>
-        <div class="hp-footer-links">
-            <span class="hp-footer-col-title">Platform</span>
-            <a href="/login">Browse Auctions</a>
-            <a href="/register">Create Account</a>
-            <a href="/login">Sell an Item</a>
-        </div>
-        <div class="hp-footer-links">
-            <span class="hp-footer-col-title">Support</span>
-            <a href="/login">Help Center</a>
-            <a href="/login">Contact Us</a>
-        </div>
-    </div>
-    <div class="hp-footer-bottom">
-        <span>© 2026 NittanyAuction. All rights reserved.</span>
-    </div>
-</footer>
-
-<script src="{{ url_for('static', filename='timer.js') }}"></script>
-<script>
-function slideCarousel(id, dir) {
-    const el = document.getElementById('carousel-' + id);
-    const cardWidth = 300;
-    el.scrollLeft += dir * cardWidth;
-}
-</script>
+        </footer>
+    </main>
 </body>
+
 </html>

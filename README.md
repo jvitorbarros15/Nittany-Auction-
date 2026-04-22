@@ -2,13 +2,9 @@
 
 A full-stack auction web application built with **Flask**, **SQLite**, and vanilla HTML/CSS for CMPSC 431W — Database Management Systems (Spring 2026).
 
----
-
 ## Project Description
 
 NittanyAuction is an online auction platform for members of Lion State University (LSU) to buy and sell goods via time-limited, bid-count-based auctions. Three user roles are supported: **Bidders**, **Sellers**, and **HelpDesk staff**.
-
----
 
 ## Setup & Run
 
@@ -32,27 +28,23 @@ http://127.0.0.1:5001/
 
 Test accounts are in `Users.csv`. Copy an email and password directly from that file to log in.
 
----
-
 ## Directory Structure
 
 ```
 Nittany-Auction/
-├── app.py                  # Flask routes, business logic, DB access
-├── seed_data.py            # Populates listings, categories, bids, etc. from CSV files
-├── seed_users.py           # Populates auth_users and bidders from Users.csv
-├── nittanyauction.db       # SQLite database (auto-created on first run)
-├── Users.csv               # Test user accounts
+├── app.py                     # Flask routes, business logic, DB access
+├── seed_data.py               # Populates listings, categories, bids, etc. from CSV files
+├── seed_users.py              # Populates auth_users and bidders from Users.csv
+├── nittanyauction.db          # SQLite database (auto-created on first run)
+├── Users.csv                  # Test user accounts
 ├── NittanyAuctionDataset_v1/  # Raw CSV datasets from course
-├── templates/              # Jinja2 HTML templates (one per page)
+├── templates/                 # Jinja2 HTML templates (one per page)
 └── static/
-    ├── style.css           # Global stylesheet
-    ├── logo.svg            # Site logo (light)
-    ├── logo-dark.svg       # Site logo (dark, used on login/register)
-    └── timer.js            # Countdown timer for auction cards
+    ├── style.css              # Global stylesheet
+    ├── logo.svg               # Site logo (light)
+    ├── logo-dark.svg          # Site logo (dark, used on login/register)
+    └── timer.js               # Countdown timer for auction cards
 ```
-
----
 
 ## Implemented Features
 
@@ -120,8 +112,6 @@ Nittany-Auction/
 - Only one rating allowed per completed transaction (duplicate prevention enforced in DB)
 - Seller's average rating displayed on every listing detail page and seller info section
 
----
-
 ### Optional / Extra Credit Functionality
 
 #### HelpDesk Support
@@ -161,8 +151,6 @@ Nittany-Auction/
 - Top-level categories are collapsible; active category auto-expands and highlights
 - Category selection preserved across search and sort changes
 
----
-
 ## Database Schema
 
 Key tables (all created automatically via `init_db()` in `app.py`):
@@ -183,8 +171,6 @@ Key tables (all created automatically via `init_db()` in `app.py`):
 | `notifications` | In-app auction outcome notifications |
 | `helpdesk_requests` | Category/role change requests and their status |
 | `seller_applications` | Bidder-to-seller upgrade applications |
-
----
 
 ## Test Accounts
 

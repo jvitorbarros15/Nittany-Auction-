@@ -5,7 +5,7 @@ import sqlite3
 from datetime import datetime
 from pathlib import Path
 
-DATASET_DIR = Path(__file__).resolve().parent.parent.parent / "NittanyAuctionDataset_v1"
+DATASET_DIR = Path(__file__).resolve().parent.parent.parent / "NittanyAuctionDataset"
 DB_PATH = Path(__file__).resolve().parent / "nittanyauction.db"
 
 
